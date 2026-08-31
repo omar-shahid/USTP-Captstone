@@ -14,7 +14,8 @@
 // ============================================================
 module risc_v #(
     parameter CLK_FREQ  = 50_000_000,
-    parameter BAUD_RATE = 9600
+    parameter BAUD_RATE = 9600,
+    parameter HEX_FILE  = ""
 ) (
     // Core
     input         clk,
@@ -86,9 +87,11 @@ module risc_v #(
   );
 
   // ── Instruction Memory ────────────────────────────────────
-  instr_mem IM (
-      pc,
-      inst
+  instr_mem #(
+      .HEX_FILE(HEX_FILE)
+  ) IM (
+      .addr(pc),
+      .inst(inst)
   );
 
   // ── Register File ─────────────────────────────────────────

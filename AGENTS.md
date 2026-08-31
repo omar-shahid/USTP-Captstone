@@ -47,11 +47,11 @@ This repository implements a 32-bit single-cycle RISC-V (RV32I subset) processor
 
 ## 3. Directory & Module Map
 
-### Core Processor Modules
+### Core Processor Modules (Root)
 
 - `risc_v.v`: Top-level integration (CPU Core + UART MMIO + Clock Divider)
-- `instr_mem.v`: ROM instruction memory
-- `data_mem.v`: RAM data memory
+- `instr_mem.v`: ROM instruction memory supporting parameterizable hex file loading
+- `data_mem.v`: RAM data memory (64 bytes)
 - `pc.v`: Program counter register
 - `adder.v`: Address computation (PC+4, Branch/Jump targets)
 - `reg_file.v`: 32x32-bit register file (x0 hardwired to 0)
@@ -61,23 +61,40 @@ This repository implements a 32-bit single-cycle RISC-V (RV32I subset) processor
 - `control_unit.v` / `cu.v`: Main control unit decoder
 - `mux.v`: Multiplexers for datapath routing
 - `clk_div.v`: Clock division for core execution
+- `program.hex`: Default machine code hex file
 
-### UART Subsystem
+### UART Subsystem (Root)
 
 - `uart_tx.v`: UART transmitter with configurable baud rate
 - `uart_rx.v`: UART receiver with sampling logic and start/stop bit validation
 - `uart_regs.v`: MMIO register interface connecting CPU bus to UART TX/RX
 
-### Testbenches & Simulation Scripts
+### Assembly Test Suite (`assembly_codes/`)
 
-- `risc_v_isa_tb.v`: RV32I instruction verification suite
-- `risc_v_uart_tb.v`: Basic CPU-to-UART transmission testbench
-- `risc_v_uart_full_tb.v`: Full end-to-end CPU + UART loopback & integration test
-- `uart_loopback_tb.v`: Standalone UART TX-to-RX loopback test
-- `uart_edge_tb.v`: UART edge cases (framing errors, baud mismatch, back-to-back bytes)
-- `run_all_tests.do`: ModelSim batch script to run all test suites
-- `run_uart_sim.do`: ModelSim script for UART testbench
-- `run_loopback.do`: ModelSim script for loopback test
+- `cpu_arithmetic_logic.s` / `.hex`: ALU arithmetic/logic operations and immediate tests
+- `cpu_branches_loops.s` / `.hex`: Conditional branch resolution (BEQ, BNE) and loop counters
+- `cpu_memory_access.s` / `.hex`: Data memory RAM write/read verification (SW, LW)
+- `uart_tx_hello.s` / `.hex`: Polling MMIO UART TX and sending "Hello, RISC-V!\n"
+- `uart_echo_loopback.s` / `.hex`: Polling MMIO UART RX and echoing back to UART TX
+- `full_soc_test.s` / `.hex`: End-to-end SoC test (computations + RAM + UART report)
+- `README.md`: Assembly instructions, memory map, and simulation documentation
+
+### Testbenches (`tb/`)
+
+- `tb/risc_v_hex_tb.v`: Dynamic hex-loading testbench with UART decoder & RX injector
+- `tb/risc_v_isa_tb.v`: RV32I instruction verification suite
+- `tb/risc_v_uart_tb.v`: Basic CPU-to-UART transmission testbench
+- `tb/risc_v_uart_full_tb.v`: Full end-to-end CPU + UART loopback & integration test
+- `tb/uart_loopback_tb.v`: Standalone UART TX-to-RX loopback test
+- `tb/uart_edge_tb.v`: UART edge cases (framing errors, baud mismatch, back-to-back bytes)
+
+### Simulation Scripts (`sim/`)
+
+- `sim/run_all_tests.do`: ModelSim batch script to run all test suites
+- `sim/run_hex_sim.do`: ModelSim script for dynamic hex simulation
+- `sim/run_uart_sim.do`: ModelSim script for UART testbench
+- `sim/run_loopback.do`: ModelSim script for loopback test
+- `sim/run_tests.ps1`: Automated PowerShell regression test runner
 
 ---
 
@@ -85,26 +102,40 @@ This repository implements a 32-bit single-cycle RISC-V (RV32I subset) processor
 
 Simulations are run using ModelSim / QuestaSim CLI via PowerShell.
 
-### Run All Testbenches (Batch Mode)
+### Run All Testbenches (Automated Regression)
 
 ```bash
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do run_all_tests.do"
+powershell.exe "Set-Location 'D:\ic_design\RISC_V'; powershell -File sim/run_tests.ps1"
+```
+
+### Run Hex-Loading Testbench with Custom Code
+
+```bash
+# Run with default program.hex
+powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do sim/run_hex_sim.do"
+
+# Run with specific assembly test program
+powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do 'run -all; quit -f' work.risc_v_hex_tb +HEX=assembly_codes/full_soc_test.hex"
+powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do 'run -all; quit -f' work.risc_v_hex_tb +HEX=assembly_codes/cpu_arithmetic_logic.hex"
 ```
 
 ### Run Specific Simulation DO-files
 
 ```bash
+# Run All Tests Batch
+powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do sim/run_all_tests.do"
+
 # UART Simulation
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do run_uart_sim.do"
+powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do sim/run_uart_sim.do"
 
 # Loopback Simulation
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do run_loopback.do"
+powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do sim/run_loopback.do"
 ```
 
 ### Manual Compile & Run Individual Testbench
 
 ```bash
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vlog -timescale 1ns/1ps -work work -sv risc_v.v risc_v_isa_tb.v; vsim -c -do 'run -all; quit -f' work.risc_v_isa_tb"
+powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vlog -timescale 1ns/1ps -work work -sv risc_v.v tb/risc_v_isa_tb.v; vsim -c -do 'run -all; quit -f' work.risc_v_isa_tb"
 ```
 
 ---
