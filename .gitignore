@@ -1,0 +1,92 @@
+# ====================================================================
+# ModelSim / QuestaSim Simulation Artifacts
+# ====================================================================
+work/
+work*/
+transcript
+vsim.wlf
+*.wlf
+wlft*
+modelsim.ini
+*.vstf
+covhtmlreport/
+*.ucdb
+*.dbg
+*.jou
+
+# ====================================================================
+# Simulation Logs & Batch Outputs
+# ====================================================================
+*.log
+sim_output.log
+questa_sim.log
+all_tests_output.log
+*_sim.log
+
+# ====================================================================
+# Waveform & Trace Dumps
+# ====================================================================
+*.vcd
+*.fst
+*.fsdb
+*.vpd
+
+# ====================================================================
+# Intel Quartus Prime Build & Synthesis Artifacts
+# ====================================================================
+db/
+incremental_db/
+output_files/
+simulation/
+greybox_tmp/
+hc_output/
+hps_isw_handoff/
+
+# Quartus Report & Metadata files
+*.rpt
+*.summary
+*.done
+*.jdi
+*.pin
+*.qdf
+*.smsg
+*.qws
+*.chg
+*.flow.rpt
+*.map.*
+*.fit.*
+*.sta.*
+*.asm.*
+*.eda.*
+
+# Quartus Programming & Bitstream files
+*.sof
+*.pof
+*.rbf
+*.ttf
+
+# ====================================================================
+# Backup, Temporary & Swap Files
+# ====================================================================
+*.bak
+*.orig
+*.tmp
+*.temp
+*~
+*.swp
+.*.swp
+
+# ====================================================================
+# OS & Editor Specific Files
+# ====================================================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+
+# ====================================================================
+# Python (if scripts are added)
+# ====================================================================
+__pycache__/
+*.py[cod]
