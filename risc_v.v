@@ -22,6 +22,8 @@ module risc_v #(
     // UART pins (connect to physical RX/TX or USB-UART)
     output        tx,
     input         rx,
+    output        uart_rx_ready,
+    output [7:0] uart_rx_data,
     // Debug / observation outputs
     output        result_src,
     memwrite,
@@ -45,6 +47,8 @@ module risc_v #(
   wire [31:0] read_data;
   wire        zero;
   wire        clk_d;
+  wire [7:0] rx_data_wire;
+  wire       rx_ready_wire;
 
   // ── Address decode ─────────────────────────────────────────
   // addr[7] = 1  →  UART registers (0x80–0xFF)
@@ -161,14 +165,16 @@ module risc_v #(
       .CLK_FREQ (CLK_FREQ),
       .BAUD_RATE(BAUD_RATE)
   ) UART (
-      .clk     (clk),
-      .reset   (reset),
-      .addr    (alu_result),
-      .wd      (rd2),
-      .memwrite(memwrite & sel_uart),
-      .rd      (uart_rd),
-      .tx      (tx),
-      .rx      (rx)
+      .clk       (clk),
+      .reset     (reset),
+      .addr      (alu_result),
+      .wd        (rd2),
+      .memwrite  (memwrite & sel_uart),
+      .rd        (uart_rd),
+      .tx        (tx),
+      .rx        (rx),
+      .rx_ready  (uart_rx_ready),
+      .rx_data   (uart_rx_data)
   );
 
   // ── Memory read-data MUX ──────────────────────────────────

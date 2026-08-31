@@ -26,7 +26,10 @@ module uart_regs #(
     output reg [31:0] rd,
     // UART pins
     output            tx,
-    input             rx
+    input             rx,
+    // Status/data outputs
+    output            rx_ready,
+    output     [7:0]  rx_data
 );
 
 // ── Internal UART TX signals ──────────────────────────────────
@@ -67,8 +70,13 @@ always @(posedge clk or posedge reset) begin
     end else if (rx_ready_wire) begin
         rx_buf        <= rx_data_wire;
         rx_ready_flag <= 1'b1;
+    end else if (!memwrite && (addr == 32'h88)) begin
+        rx_ready_flag <= 1'b0;
     end
 end
+
+assign rx_ready = rx_ready_wire;
+assign rx_data  = rx_data_wire;
 
 // ── TX write: generate one-cycle tx_start on write to 0x80 ───
 reg prev_write_80;

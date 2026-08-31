@@ -11,7 +11,8 @@ wire [1:0] aluop;
 
 control_unit C1(branch, regwrite, memwrite, alu_src, result_src, imm_src, aluop, opcode);
 
-alu_control C2(alu_control, aluop, fun3, fun7);
+wire fun7_eff = (fun3 == 3'b101) ? fun7 : (fun7 & opcode[5]);
+alu_control C2(alu_control, aluop, fun3, fun7_eff);
 
 // Branch condition decode (using funct3)
 // fun3 000 = BEQ  : take when  zero (a == b)
