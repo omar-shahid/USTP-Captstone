@@ -33,7 +33,12 @@ vlog -timescale 1ns/1ps -work work -sv \
     "$TB_DIR/risc_v_hex_tb.v"
 
 # ── Launch Simulation ──────────────────────────────────────────
-vsim -t 1ns -voptargs=+acc work.risc_v_hex_tb +HEX=assembly_codes/uart_tx_hello.hex
+# Default to program.hex unless an argument is passed (e.g. do sim/run_hex_sim.do path/to/file.hex)
+set hex_target "program.hex"
+if {[info exists 1]} {
+    set hex_target "$1"
+}
+vsim -t 1ns -voptargs=+acc work.risc_v_hex_tb +HEX=$hex_target
 
 # ── Waveform Signals & Configuration ───────────────────────────
 

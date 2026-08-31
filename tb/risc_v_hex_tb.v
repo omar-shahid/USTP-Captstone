@@ -85,6 +85,11 @@ module risc_v_hex_tb;
         $display("  RISC-V PROCESSOR HEX-LOADER SIMULATION");
         $display("==================================================");
 
+        // Initialize instruction memory with NOPs (addi x0, x0, 0) before loading
+        for (integer k = 0; k < DUT.IM.MEM_WORDS; k = k + 1) begin
+            DUT.IM.mem[k] = 32'h00000013;
+        end
+
         // Check for runtime +HEX=<file> argument
         if ($value$plusargs("HEX=%s", hex_file)) begin
             $display("[INFO] Loading runtime hex file: %s", hex_file);
