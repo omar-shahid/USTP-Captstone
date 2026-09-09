@@ -19,7 +19,7 @@ set_db opt_useful_skew true
 
 # ── Place Standard Cells ─────────────────────────────────────
 puts "INFO: Running standard cell placement..."
-place_design -concurrent
+place_opt_design
 
 puts "INFO: Placement complete."
 
@@ -32,13 +32,13 @@ opt_design -pre_cts
 
 # ── Generate Reports ──────────────────────────────────────────
 report_timing -max_paths 20 > ${RPT_DIR}/post_place_timing.rpt
-report_congestion -hot_spot > ${RPT_DIR}/post_place_congestion.rpt
-report_design_summary       > ${RPT_DIR}/post_place_summary.rpt
+report_congestion           > ${RPT_DIR}/post_place_congestion.rpt
+report_design               > ${RPT_DIR}/post_place_summary.rpt
 
 # ── Save Checkpoint ──────────────────────────────────────────
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints
-save_design ${SAVE_DIR}/04_placement.enc
+write_db ${SAVE_DIR}/04_placement
 
 puts ""
-puts "INFO: Placement complete. Saved to: ${SAVE_DIR}/04_placement.enc"
+puts "INFO: Placement complete. Saved to: ${SAVE_DIR}/04_placement"
 puts ""

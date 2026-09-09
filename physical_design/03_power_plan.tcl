@@ -15,16 +15,16 @@ puts "======================================================"
 set PROJ_ROOT [file normalize [file dirname [info script]]/..]
 
 # ── Connect Global Nets ──────────────────────────────────────
-globalNetConnect VDD -type pgpin -pin VDD -inst * -override
-globalNetConnect VSS -type pgpin -pin VSS -inst * -override
-globalNetConnect VDD -type tiehi -inst *
-globalNetConnect VSS -type tielo -inst *
+connect_global_net VDD -type pg_pin -pin VDD -inst *
+connect_global_net VSS -type pg_pin -pin VSS -inst *
+connect_global_net VDD -type tie_hi
+connect_global_net VSS -type tie_lo
 
 puts "INFO: Global nets VDD/VSS connected."
 
 # ── Power Rings (Around Core Boundary) ───────────────────────
 # Metal5 (horizontal) and Metal6 (vertical) for low IR drop
-addRing -type core_rings \
+add_rings -type core_rings \
     -nets {VDD VSS} \
     -width  10.0 \
     -spacing 2.0 \
@@ -38,7 +38,7 @@ puts "INFO: Core power rings created (Metal5/Metal6, width 10 um)."
 
 # ── Block Rings Around Hard Macros ───────────────────────────
 # Adds local VDD/VSS rings around each RAM and ROM block
-addRing -type block_rings \
+add_rings -type block_rings \
     -nets {VDD VSS} \
     -width 4.0 \
     -spacing 1.5 \
@@ -49,7 +49,7 @@ addRing -type block_rings \
 puts "INFO: Block power rings created around RAM and ROM macros."
 
 # ── Vertical Power Stripes (Metal6) ──────────────────────────
-addStripe -nets {VDD VSS} \
+add_stripes -nets {VDD VSS} \
     -layer Metal6 \
     -direction vertical \
     -width 4.0 \
@@ -64,7 +64,7 @@ addStripe -nets {VDD VSS} \
 puts "INFO: Vertical power stripes added (Metal6)."
 
 # ── Horizontal Power Stripes (Metal5) ─────────────────────────
-addStripe -nets {VDD VSS} \
+add_stripes -nets {VDD VSS} \
     -layer Metal5 \
     -direction horizontal \
     -width 4.0 \
@@ -79,7 +79,7 @@ addStripe -nets {VDD VSS} \
 puts "INFO: Horizontal power stripes added (Metal5)."
 
 # ── Special Route (Standard Cell Rails & Macro Pins) ──────────
-sroute -connect {blockPin padPin padRing corePin floatingStripe} \
+route_special -connect {blockPin padPin padRing corePin floatingStripe} \
     -layerChangeRange {Metal1 Metal6} \
     -blockPinTarget {nearestTarget} \
     -corePinTarget {firstAfterRowEnd} \
@@ -93,13 +93,13 @@ puts "INFO: Special routing complete (Standard cell rails & macro power connecte
 # ── Verify Power Connectivity ─────────────────────────────────
 set RPT_DIR ${PROJ_ROOT}/physical_design/reports
 file mkdir $RPT_DIR
-verify_connectivity -type special -nets {VDD VSS} \
+check_connectivity -type special -nets {VDD VSS} \
     -report ${RPT_DIR}/power_connectivity.rpt
 
 # ── Save Checkpoint ──────────────────────────────────────────
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints
-save_design ${SAVE_DIR}/03_power_plan.enc
+write_db ${SAVE_DIR}/03_power_plan
 
 puts ""
-puts "INFO: Power planning complete. Saved to: ${SAVE_DIR}/03_power_plan.enc"
+puts "INFO: Power planning complete. Saved to: ${SAVE_DIR}/03_power_plan"
 puts ""

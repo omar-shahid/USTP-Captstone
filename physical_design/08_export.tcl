@@ -48,7 +48,7 @@ puts "INFO: SPEF written: ${OUTPUT_DIR}/risc_v.spef"
 
 # ── Save Final Database ──────────────────────────────────────
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints
-save_design ${SAVE_DIR}/08_final.enc
+write_db ${SAVE_DIR}/08_final
 
 puts ""
 puts "======================================================"
@@ -59,5 +59,5 @@ puts "   Timing:   ${OUTPUT_DIR}/risc_v_slow.sdf (slow)"
 puts "             ${OUTPUT_DIR}/risc_v_fast.sdf (fast)"
 puts "   DEF:      ${OUTPUT_DIR}/risc_v.def"
 puts "   SPEF:     ${OUTPUT_DIR}/risc_v.spef"
-puts "   Database: ${SAVE_DIR}/08_final.enc"
+puts "   Database: ${SAVE_DIR}/08_final"
 puts "======================================================"

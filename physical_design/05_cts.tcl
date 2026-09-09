@@ -29,8 +29,8 @@ set_db cts_route_top_preferred_layer    Metal5
 set_db cts_route_bottom_preferred_layer Metal3
 
 # ── Run CTS (CCOpt) ──────────────────────────────────────────
-puts "INFO: Running Clock Concurrent Optimization (ccopt_design)..."
-ccopt_design
+puts "INFO: Running Clock Concurrent Optimization (clock_opt_design)..."
+clock_opt_design
 
 puts "INFO: CTS complete."
 
@@ -40,15 +40,15 @@ opt_design -post_cts
 opt_design -post_cts -hold
 
 # ── Reports ──────────────────────────────────────────────────
-report_ccopt_clock_trees > ${RPT_DIR}/cts_clock_trees.rpt
-report_ccopt_skew_groups > ${RPT_DIR}/cts_skew_groups.rpt
+report_clock_trees > ${RPT_DIR}/cts_clock_trees.rpt
+report_skew_groups > ${RPT_DIR}/cts_skew_groups.rpt
 report_timing -max_paths 20        > ${RPT_DIR}/post_cts_timing_setup.rpt
 report_timing -max_paths 20 -early > ${RPT_DIR}/post_cts_timing_hold.rpt
 
 # ── Save Checkpoint ──────────────────────────────────────────
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints
-save_design ${SAVE_DIR}/05_cts.enc
+write_db ${SAVE_DIR}/05_cts
 
 puts ""
-puts "INFO: CTS complete. Saved to: ${SAVE_DIR}/05_cts.enc"
+puts "INFO: CTS complete. Saved to: ${SAVE_DIR}/05_cts"
 puts ""

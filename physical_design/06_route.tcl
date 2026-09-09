@@ -14,11 +14,11 @@ set RPT_DIR   ${PROJ_ROOT}/physical_design/reports
 file mkdir $RPT_DIR
 
 # ── Routing Layer Limits ──────────────────────────────────────
-set_db route_design_bottom_routing_layer 1
-set_db route_design_top_routing_layer    6
+set_db design_bottom_routing_layer 1
+set_db design_top_routing_layer    6
 
-set_db route_design_with_timing_driven   true
-set_db route_design_with_si_driven       true
+set_db route_with_timing_driven   true
+set_db route_with_si_driven       true
 
 # ── Run NanoRoute ─────────────────────────────────────────────
 puts "INFO: Running detailed routing (route_design)..."
@@ -46,13 +46,13 @@ puts "INFO: Filler cells inserted."
 report_timing -max_paths 20        > ${RPT_DIR}/post_route_timing_setup.rpt
 report_timing -max_paths 20 -early > ${RPT_DIR}/post_route_timing_hold.rpt
 report_route                       > ${RPT_DIR}/route_summary.rpt
-verify_drc -report                   ${RPT_DIR}/post_route_drc.rpt
-verify_connectivity -report          ${RPT_DIR}/post_route_connectivity.rpt
+check_drc -report                   ${RPT_DIR}/post_route_drc.rpt
+check_connectivity -report          ${RPT_DIR}/post_route_connectivity.rpt
 
 # ── Save Checkpoint ──────────────────────────────────────────
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints
-save_design ${SAVE_DIR}/06_route.enc
+write_db ${SAVE_DIR}/06_route
 
 puts ""
-puts "INFO: Routing complete. Saved to: ${SAVE_DIR}/06_route.enc"
+puts "INFO: Routing complete. Saved to: ${SAVE_DIR}/06_route"
 puts ""

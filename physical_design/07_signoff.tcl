@@ -37,25 +37,25 @@ report_timing -max_paths 50 -path_type full_clock -early -max_slack 0.0 \
     > ${RPT_DIR}/signoff_timing_violations_hold.rpt
 
 # ── Overall Timing Summary ───────────────────────────────────
-report_timing_summary > ${RPT_DIR}/signoff_timing_summary.rpt
+time_design -post_route > ${RPT_DIR}/signoff_timing_summary.rpt
 
 # ── DRC & Connectivity Checks ─────────────────────────────────
 puts "INFO: Running signoff DRC and connectivity checks..."
-verify_drc -limit 1000      -report ${RPT_DIR}/signoff_drc.rpt
-verify_connectivity -type all -report ${RPT_DIR}/signoff_connectivity.rpt
-verify_process_antenna        -report ${RPT_DIR}/signoff_antenna.rpt
+check_drc -limit 1000      -report ${RPT_DIR}/signoff_drc.rpt
+check_connectivity -type all -report ${RPT_DIR}/signoff_connectivity.rpt
+check_process_antenna        -report ${RPT_DIR}/signoff_antenna.rpt
 
 # ── Power & Area Reports ──────────────────────────────────────
 report_power -view view_slow > ${RPT_DIR}/signoff_power_slow.rpt
 report_power -view view_fast > ${RPT_DIR}/signoff_power_fast.rpt
 report_area                  > ${RPT_DIR}/signoff_area.rpt
-report_design_summary        > ${RPT_DIR}/signoff_design_summary.rpt
+report_design                > ${RPT_DIR}/signoff_design_summary.rpt
 
 # ── Save Checkpoint ──────────────────────────────────────────
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints
-save_design ${SAVE_DIR}/07_signoff.enc
+write_db ${SAVE_DIR}/07_signoff
 
 puts ""
 puts "INFO: Signoff complete. Reports written to: ${RPT_DIR}/"
-puts "INFO: Checkpoint saved to: ${SAVE_DIR}/07_signoff.enc"
+puts "INFO: Checkpoint saved to: ${SAVE_DIR}/07_signoff"
 puts ""
