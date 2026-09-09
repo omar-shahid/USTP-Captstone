@@ -1,55 +1,72 @@
-# ============================================================
-#  06_route.tcl — Signal Routing for TSMC 0.18um (6-Metal)
+# ==============================================================================
+#  06_route.tcl — Detail Routing & Filler Insertion
 #
-#  Routing Layers: Metal1 to Metal5 (Signal), Metal6 (Top)
-#  Filler Cells:   FILL1 FILL2 FILL4 FILL8 FILL16 FILL32 FILL64
-# ============================================================
+#  Technology: TSMC 0.18um (6-Metal)
+#  Routing Layers: Metal1 to Metal6
+#
+#  Syntax reference:
+#    Innovus_Block_Design/FPR/work/stylus_scripts/innovus_config.tcl
+#    Innovus_Block_Design/FPR/work/scripts/flow/innovus_steps.tcl
+#    Lab Manual Module 16/17: route_opt_design
+# ==============================================================================
 
 puts "======================================================"
-puts " STEP 6: Signal Routing (TSMC 0.18um 6-Metal)"
+puts " STEP 6: Detail Routing (TSMC 0.18um 6-Metal)"
 puts "======================================================"
 
-set PROJ_ROOT [file normalize [file dirname [info script]]/..]
+set PROJ_ROOT [file normalize [file dirname [info script]]/..] 
 set RPT_DIR   ${PROJ_ROOT}/physical_design/reports
 file mkdir $RPT_DIR
 
-# ── Routing Layer Limits ──────────────────────────────────────
-set_db design_bottom_routing_layer 1
-set_db design_top_routing_layer    6
+# ------------------------------------------------------------------------------
+#  Routing Attributes
+#    Reference: set_db route_design_detail_use_multi_cut_via_effort
+#    from Innovus_Block_Design/FPR/work reference
+# ------------------------------------------------------------------------------
+set_db route_design_detail_use_multi_cut_via_effort medium
 
-set_db route_with_timing_driven   true
-set_db route_with_si_driven       true
+# ------------------------------------------------------------------------------
+#  SI-Driven & Timing-Driven Routing
+# ------------------------------------------------------------------------------
+set_db delaycal_enable_si true
+set_db extract_rc_engine  post_route
 
-# ── Run NanoRoute ─────────────────────────────────────────────
-puts "INFO: Running detailed routing (route_design)..."
-route_design
+# ------------------------------------------------------------------------------
+#  Optimization Prefix
+# ------------------------------------------------------------------------------
+set_db opt_new_inst_prefix "routeopt_"
 
-puts "INFO: Detailed routing complete."
+# ------------------------------------------------------------------------------
+#  Run Detail Routing with Optimization (route_opt_design)
+#    Unified route + post-route optimization command (Stylus Common UI)
+#    This replaces legacy route_design + opt_design -post_route
+# ------------------------------------------------------------------------------
+puts "INFO: Running detail routing (route_opt_design)..."
+route_opt_design
 
-# ── Post-Route Optimization ──────────────────────────────────
-puts "INFO: Running post-route optimization..."
-opt_design -post_route
-opt_design -post_route -hold
+puts "INFO: Detail routing complete."
 
-# ── Fix DRC Violations ───────────────────────────────────────
-puts "INFO: Running DRC-aware ECO routing..."
-route_eco -fix_drc
-
-# ── Filler Cell Insertion ─────────────────────────────────────
-puts "INFO: Inserting filler cells..."
-set_db add_fillers_cells {FILL64 FILL32 FILL16 FILL8 FILL4 FILL2 FILL1}
+# ------------------------------------------------------------------------------
+#  Filler Cell Insertion
+#    Reference: set_db add_fillers_cells from innovus_config.tcl
+# ------------------------------------------------------------------------------
+set_db add_fillers_cells "FILL64 FILL32 FILL16 FILL8 FILL4 FILL2 FILL1"
 add_fillers
 
 puts "INFO: Filler cells inserted."
 
-# ── Post-Route Reports ───────────────────────────────────────
+# ------------------------------------------------------------------------------
+#  Post-Route Reports
+# ------------------------------------------------------------------------------
+time_design -post_route       > ${RPT_DIR}/post_route_setup.rpt
+time_design -post_route -hold > ${RPT_DIR}/post_route_hold.rpt
+
 report_timing -max_paths 20        > ${RPT_DIR}/post_route_timing_setup.rpt
 report_timing -max_paths 20 -early > ${RPT_DIR}/post_route_timing_hold.rpt
-report_route                       > ${RPT_DIR}/route_summary.rpt
-check_drc                            > ${RPT_DIR}/post_route_drc.rpt
-check_connectivity                   > ${RPT_DIR}/post_route_connectivity.rpt
 
-# ── Save Checkpoint ──────────────────────────────────────────
+# ------------------------------------------------------------------------------
+#  Save Checkpoint
+# ------------------------------------------------------------------------------
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints
 write_db ${SAVE_DIR}/06_route
 
