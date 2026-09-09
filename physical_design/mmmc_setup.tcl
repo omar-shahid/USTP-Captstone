@@ -11,15 +11,19 @@
 
 puts "INFO: Configuring MMMC setup for TSMC 0.18um..."
 
-set PROJ_ROOT [file normalize [file dirname [info script]]/..]
+if {[info exists PROJ_ROOT]} {
+    set BASE_DIR $PROJ_ROOT
+} else {
+    set BASE_DIR [file normalize [file dirname [info script]]/..]
+}
 
 # ── Library Paths ─────────────────────────────────────────────
-set LIB_DIR  ${PROJ_ROOT}/lib
-set QRC_FILE ${PROJ_ROOT}/QRC/t018s6mm.tch
-set CAP_TBL  ${PROJ_ROOT}/QRC/t018s6mm.CapTbl
-set SDC_FILE ${PROJ_ROOT}/constraints/constraints.sdc
+set LIB_DIR  ${BASE_DIR}/lib
+set QRC_FILE ${BASE_DIR}/QRC/t018s6mm.tch
+set CAP_TBL  ${BASE_DIR}/QRC/t018s6mm.CapTbl
+set SDC_FILE ${BASE_DIR}/constraints/constraints.sdc
 
-# ── Create Library Sets ───────────────────────────────────────
+# ── 1. Create Library Sets ────────────────────────────────────
 # Slow corner: Standard cells + RAM + ROM
 create_library_set -name lib_slow \
     -timing [list \
@@ -36,31 +40,52 @@ create_library_set -name lib_fast \
         ${LIB_DIR}/rom_512x16A_fast_syn.lib \
     ]
 
-# ── Create RC Corners ────────────────────────────────────────
+# ── 2. Create Timing Conditions ───────────────────────────────
+create_timing_condition -name tc_slow \
+    -library_sets [list lib_slow]
+
+create_timing_condition -name tc_fast \
+    -library_sets [list lib_fast]
+
+# ── 3. Create RC Corners ──────────────────────────────────────
 create_rc_corner -name rc_slow \
+    -pre_route_res 1.0 \
+    -post_route_res 1.0 \
+    -pre_route_cap 1.0 \
+    -post_route_cap 1.0 \
+    -post_route_cross_cap 1.0 \
+    -pre_route_clock_res 0.0 \
+    -pre_route_clock_cap 0.0 \
+    -temperature 125 \
     -qrc_tech $QRC_FILE \
-    -cap_table $CAP_TBL \
-    -T 125
+    -cap_table $CAP_TBL
 
 create_rc_corner -name rc_fast \
+    -pre_route_res 1.0 \
+    -post_route_res 1.0 \
+    -pre_route_cap 1.0 \
+    -post_route_cap 1.0 \
+    -post_route_cross_cap 1.0 \
+    -pre_route_clock_res 0.0 \
+    -pre_route_clock_cap 0.0 \
+    -temperature 0 \
     -qrc_tech $QRC_FILE \
-    -cap_table $CAP_TBL \
-    -T 0
+    -cap_table $CAP_TBL
 
-# ── Create Delay Corners ─────────────────────────────────────
+# ── 4. Create Delay Corners ───────────────────────────────────
 create_delay_corner -name dc_slow \
-    -library_set lib_slow \
+    -timing_condition {tc_slow} \
     -rc_corner rc_slow
 
 create_delay_corner -name dc_fast \
-    -library_set lib_fast \
+    -timing_condition {tc_fast} \
     -rc_corner rc_fast
 
-# ── Create Constraint Mode ───────────────────────────────────
+# ── 5. Create Constraint Mode ─────────────────────────────────
 create_constraint_mode -name func_mode \
     -sdc_files [list $SDC_FILE]
 
-# ── Create Analysis Views ────────────────────────────────────
+# ── 6. Create Analysis Views ──────────────────────────────────
 create_analysis_view -name view_slow \
     -constraint_mode func_mode \
     -delay_corner dc_slow
@@ -69,7 +94,7 @@ create_analysis_view -name view_fast \
     -constraint_mode func_mode \
     -delay_corner dc_fast
 
-# ── Set Active Analysis Views ─────────────────────────────────
+# ── 7. Set Active Analysis Views ──────────────────────────────
 set_analysis_view \
     -setup [list view_slow] \
     -hold  [list view_fast]

@@ -93,7 +93,7 @@ module risc_v_isa_tb;
     );
 
     // Register File
-    reg         rf_clk, rf_regwrite;
+    reg         rf_clk, rf_regwrite, rf_reset;
     reg  [ 4:0] rf_rs1, rf_rs2, rf_rd;
     reg  [31:0] rf_wd;
     wire [31:0] rf_rd1, rf_rd2;
@@ -105,7 +105,8 @@ module risc_v_isa_tb;
         .rd(rf_rd),
         .wd(rf_wd),
         .regwrite(rf_regwrite),
-        .clk(rf_clk)
+        .clk(rf_clk),
+        .reset(rf_reset)
     );
 
     // Data Memory
@@ -297,6 +298,10 @@ module risc_v_isa_tb;
         // TEST GROUP 4: Register File
         // ════════════════════════════════════════════════════════
         $display("\n[INFO] [%0t] --- Test Group 4: Register File ---", $time);
+
+        // Reset RF
+        rf_reset = 1'b1; rf_regwrite = 1'b0; #10;
+        rf_reset = 1'b0; #5;
 
         // Write to x1
         @(negedge rf_clk);

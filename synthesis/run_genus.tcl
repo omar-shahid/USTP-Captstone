@@ -118,6 +118,7 @@ write_hdl -mapped > ${OUTPUT_DIR}/risc_v_netlist.v
 write_sdc > ${OUTPUT_DIR}/risc_v_constraints.sdc
 write_sdf -timescale ns -nonegchecks -recrem split -setuphold split > ${OUTPUT_DIR}/risc_v.sdf
 write_design -base_name ${OUTPUT_DIR}/risc_v_genus
+catch { write_do_lec -golden_design risc_v -revised_design ${OUTPUT_DIR}/risc_v_netlist.v -logfile ${PROJ_ROOT}/lec/reports/genus_lec.log > ${PROJ_ROOT}/lec/run_lec_auto.do }
 
 puts ""
 puts "======================================================"

@@ -19,8 +19,6 @@ set system mode setup
 set log file lec/reports/lec_execution.log -replace
 set rule handling -warning
 
-// Support 32-bit/64-bit integer sizing & Verilog-2001
-set naming rule -parameter
 set flatten model -seq_constant
 set flatten model -nodff_to_dlat_zero
 set flatten model -nodff_to_dlat_feedback
@@ -70,12 +68,16 @@ read design \
 
 set root module risc_v -revised
 
-// ── Step 6: Identify Black Boxes ─────────────────────────────
+// ── Step 6: Constrain Reset ──────────────────────────────────
+// Hold active-high reset inactive (0) during comparison
+add pin constraints 0 reset -both
+
+// ── Step 7: Identify Black Boxes ─────────────────────────────
 // Hard macros (RAM & ROM) are preserved as black-box cut-points
 puts "INFO: Reporting black boxes in both designs..."
 report black box
 
-// ── Step 7: Switch to Comparison Mode (LEC) ──────────────────
+// ── Step 8: Switch to Comparison Mode (LEC) ──────────────────
 set system mode lec
 
 // ── Step 8: Map Key Points ───────────────────────────────────

@@ -90,3 +90,6 @@ Desktop.ini
 # ====================================================================
 __pycache__/
 *.py[cod]
+
+counter_design_database_45nm/
+Innovus_Block_Design

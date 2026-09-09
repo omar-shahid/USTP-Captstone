@@ -263,7 +263,8 @@ module risc_v #(
 
         .regwrite (regwrite),
 
-        .clk      (clk_d)
+        .clk      (clk_d),
+        .reset    (reset)
     );
 
 
