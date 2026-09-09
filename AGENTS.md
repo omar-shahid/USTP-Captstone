@@ -2,25 +2,22 @@
 
 ## 1. Environment & Command Execution
 
-The agent runs in a **WSL (Linux)** environment, while EDA tools (**ModelSim / QuestaSim**, **Intel Quartus Prime**) are installed on the Windows host (`D:\ic_design\RISC_V`).
+The agent runs in a native **Windows** environment (PowerShell). EDA tools (**ModelSim / QuestaSim**, **Intel Quartus Prime**) are installed on Windows (`D:\ic_design\RISC_V`).
 
-### Running Windows Commands from WSL
+### Running Commands in PowerShell
 
-All Windows EDA binaries must be executed through `powershell.exe` from WSL:
+All EDA binaries and scripts can be executed directly in PowerShell:
 
-```bash
-# Example syntax
-powershell.exe "command"
-
+```powershell
 # Check tool availability / paths
-powershell.exe "Get-Command vsim"
-powershell.exe "Get-Command quartus_sh"
+Get-Command vsim
+Get-Command quartus_sh
 ```
 
 ### Path Conventions
 
-- **WSL path**: `/mnt/d/ic_design/RISC_V`
-- **Windows / ModelSim DO-script path**: `D:/ic_design/RISC_V` or `D:\ic_design\RISC_V`
+- **Windows path**: `D:\ic_design\RISC_V` or `D:/ic_design/RISC_V`
+- **ModelSim DO-script path**: `D:/ic_design/RISC_V` or relative paths (use forward slashes `/` in DO/Tcl scripts)
 
 ---
 
@@ -100,42 +97,44 @@ This repository implements a 32-bit single-cycle RISC-V (RV32I subset) processor
 
 ## 4. Verification & Simulation Commands
 
-Simulations are run using ModelSim / QuestaSim CLI via PowerShell.
+Simulations are run using ModelSim / QuestaSim CLI directly in PowerShell.
 
 ### Run All Testbenches (Automated Regression)
 
-```bash
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; powershell -File sim/run_tests.ps1"
+```powershell
+powershell -File sim/run_tests.ps1
+# or directly:
+.\sim\run_tests.ps1
 ```
 
 ### Run Hex-Loading Testbench with Custom Code
 
-```bash
+```powershell
 # Run with default program.hex
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do sim/run_hex_sim.do"
+vsim -c -do sim/run_hex_sim.do
 
 # Run with specific assembly test program
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do 'run -all; quit -f' work.risc_v_hex_tb +HEX=assembly_codes/full_soc_test.hex"
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do 'run -all; quit -f' work.risc_v_hex_tb +HEX=assembly_codes/cpu_arithmetic_logic.hex"
+vsim -c -do "run -all; quit -f" work.risc_v_hex_tb +HEX=assembly_codes/full_soc_test.hex
+vsim -c -do "run -all; quit -f" work.risc_v_hex_tb +HEX=assembly_codes/cpu_arithmetic_logic.hex
 ```
 
 ### Run Specific Simulation DO-files
 
-```bash
+```powershell
 # Run All Tests Batch
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do sim/run_all_tests.do"
+vsim -c -do sim/run_all_tests.do
 
 # UART Simulation
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do sim/run_uart_sim.do"
+vsim -c -do sim/run_uart_sim.do
 
 # Loopback Simulation
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vsim -c -do sim/run_loopback.do"
+vsim -c -do sim/run_loopback.do
 ```
 
 ### Manual Compile & Run Individual Testbench
 
-```bash
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; vlog -timescale 1ns/1ps -work work -sv risc_v.v tb/risc_v_isa_tb.v; vsim -c -do 'run -all; quit -f' work.risc_v_isa_tb"
+```powershell
+vlog -timescale 1ns/1ps -work work -sv risc_v.v tb/risc_v_isa_tb.v; vsim -c -do "run -all; quit -f" work.risc_v_isa_tb
 ```
 
 ---
@@ -146,21 +145,21 @@ When targeting FPGA boards (e.g. Cyclone IV / DE-series / MAX 10):
 
 ### Full Compilation via Quartus CLI
 
-```bash
+```powershell
 # Run analysis & synthesis
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; quartus_map <project_name>"
+quartus_map <project_name>
 
 # Run fitter (place & route)
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; quartus_fit <project_name>"
+quartus_fit <project_name>
 
 # Run timing analysis
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; quartus_sta <project_name>"
+quartus_sta <project_name>
 
 # Run assembler (generate bitstream .sof/.pof)
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; quartus_asm <project_name>"
+quartus_asm <project_name>
 
 # Complete build flow in one command
-powershell.exe "Set-Location 'D:\ic_design\RISC_V'; quartus_sh --flow compile <project_name>"
+quartus_sh --flow compile <project_name>
 ```
 
 ---

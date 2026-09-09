@@ -13,7 +13,7 @@ if (-not (Test-Path "work")) {
     vmap work work
 }
 
-$compileCmd = "vlog -timescale 1ns/1ps -work work -sv adder.v alu.v alu_control.v clk_div.v control_unit.v cu.v data_mem.v imm_ext.v instr_mem.v mux.v pc.v reg_file.v uart_tx.v uart_rx.v uart_regs.v risc_v.v tb/risc_v_isa_tb.v tb/uart_edge_tb.v tb/risc_v_uart_tb.v tb/uart_loopback_tb.v tb/risc_v_uart_full_tb.v tb/risc_v_hex_tb.v"
+$compileCmd = "vlog -timescale 1ns/1ps -work work -sv macro_models/rom_512x16A.v macro_models/ram_128x16A.v adder.v alu.v alu_control.v clk_div.v control_unit.v cu.v data_mem.v imm_ext.v instr_mem.v mux.v pc.v reg_file.v uart_tx.v uart_rx.v uart_regs.v pwm_regs.v spi_reg.v risc_v.v tb/risc_v_isa_tb.v tb/uart_edge_tb.v tb/risc_v_uart_tb.v tb/uart_loopback_tb.v tb/risc_v_uart_full_tb.v tb/risc_v_hex_tb.v"
 Invoke-Expression $compileCmd
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Compilation failed!" -ForegroundColor Red

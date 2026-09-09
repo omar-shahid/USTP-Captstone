@@ -223,7 +223,8 @@ module risc_v #(
     instr_mem #(
         .HEX_FILE (HEX_FILE)
     )
-    INSTRUCTION_MEMORY (
+    IM (
+        .clk  (~clk_d),
         .addr (pc),
         .inst (instruction)
     );
