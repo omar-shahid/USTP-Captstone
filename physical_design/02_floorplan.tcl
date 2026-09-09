@@ -32,19 +32,19 @@ puts "INFO: Die created: 1500 x 1200 um (Core margin: 20 um)."
 puts "INFO: Placing memory hard macros..."
 
 set_db [get_db insts *ram_data_lo] .location {80.0 950.0}
-set_db [get_db insts *ram_data_lo] .orientation R0
+set_db [get_db insts *ram_data_lo] .orient R0
 set_db [get_db insts *ram_data_lo] .place_status fixed
 
 set_db [get_db insts *ram_data_hi] .location {750.0 950.0}
-set_db [get_db insts *ram_data_hi] .orientation R0
+set_db [get_db insts *ram_data_hi] .orient R0
 set_db [get_db insts *ram_data_hi] .place_status fixed
 
 set_db [get_db insts *rom_inst_lo] .location {120.0 80.0}
-set_db [get_db insts *rom_inst_lo] .orientation R0
+set_db [get_db insts *rom_inst_lo] .orient R0
 set_db [get_db insts *rom_inst_lo] .place_status fixed
 
 set_db [get_db insts *rom_inst_hi] .location {750.0 80.0}
-set_db [get_db insts *rom_inst_hi] .orientation R0
+set_db [get_db insts *rom_inst_hi] .orient R0
 set_db [get_db insts *rom_inst_hi] .place_status fixed
 
 puts "INFO: Hard macros placed and fixed."

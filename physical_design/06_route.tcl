@@ -46,8 +46,8 @@ puts "INFO: Filler cells inserted."
 report_timing -max_paths 20        > ${RPT_DIR}/post_route_timing_setup.rpt
 report_timing -max_paths 20 -early > ${RPT_DIR}/post_route_timing_hold.rpt
 report_route                       > ${RPT_DIR}/route_summary.rpt
-check_drc -report                   ${RPT_DIR}/post_route_drc.rpt
-check_connectivity -report          ${RPT_DIR}/post_route_connectivity.rpt
+check_drc                            > ${RPT_DIR}/post_route_drc.rpt
+check_connectivity                   > ${RPT_DIR}/post_route_connectivity.rpt
 
 # ── Save Checkpoint ──────────────────────────────────────────
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints

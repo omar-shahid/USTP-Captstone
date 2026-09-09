@@ -3,7 +3,7 @@
 #
 #  6-Metal Stack:
 #    - Core Rings: Metal5 (Horizontal) and Metal6 (Vertical)
-#    - Power Stripes: Metal5 & Metal6 grid
+#    - Power Stripes: Metal6 vertical grid
 #    - Macro Power Rings: VDD/VSS routing to RAM/ROM blocks
 #    - Standard Cell Rails: Metal1 follow-pins
 # ============================================================
@@ -22,71 +22,78 @@ connect_global_net VSS -type tie_lo
 
 puts "INFO: Global nets VDD/VSS connected."
 
-# ── Power Rings (Around Core Boundary) ───────────────────────
-# Metal5 (horizontal) and Metal6 (vertical) for low IR drop
-add_rings -type core_rings \
-    -nets {VDD VSS} \
-    -width  10.0 \
-    -spacing 2.0 \
-    -offset  2.0 \
-    -layer {top Metal5 bottom Metal5 left Metal6 right Metal6} \
-    -jog_distance 1.0 \
-    -threshold 1.0 \
-    -follow core
+# ── Power Ring Attributes ────────────────────────────────────
+set_db add_rings_stacked_via_top_layer    Metal6
+set_db add_rings_stacked_via_bottom_layer Metal1
 
-puts "INFO: Core power rings created (Metal5/Metal6, width 10 um)."
+# ── Core Power Rings (Around Core Boundary) ──────────────────
+# Metal5 (horizontal) and Metal6 (vertical) for low IR drop
+# Per-side width/spacing/offset to avoid VDD/VSS overlap
+add_rings -nets {VDD VSS} \
+    -type core_rings \
+    -follow core \
+    -layer {top Metal5 bottom Metal5 left Metal6 right Metal6} \
+    -width   {top 8 bottom 8 left 8 right 8} \
+    -spacing {top 1 bottom 1 left 1 right 1} \
+    -offset  {top 1 bottom 1 left 1 right 1} \
+    -center 0 \
+    -threshold 0 \
+    -jog_distance 0 \
+    -snap_wire_center_to_grid none
+
+puts "INFO: Core power rings created (Metal5/Metal6, width 8 um, spacing 1 um)."
 
 # ── Block Rings Around Hard Macros ───────────────────────────
 # Adds local VDD/VSS rings around each RAM and ROM block
-add_rings -type block_rings \
-    -nets {VDD VSS} \
-    -width 4.0 \
-    -spacing 1.5 \
-    -offset 2.0 \
+add_rings -nets {VDD VSS} \
+    -type block_rings \
+    -around each_block \
     -layer {top Metal5 bottom Metal5 left Metal6 right Metal6} \
-    -around each_block
+    -width   {top 8 bottom 8 left 8 right 8} \
+    -spacing {top 1 bottom 1 left 1 right 1} \
+    -offset  {top 1 bottom 1 left 1 right 1} \
+    -center 0 \
+    -threshold 0 \
+    -jog_distance 0 \
+    -snap_wire_center_to_grid none
 
 puts "INFO: Block power rings created around RAM and ROM macros."
+
+# ── Stripe Attributes ────────────────────────────────────────
+set_db add_stripes_stacked_via_top_layer    Metal6
+set_db add_stripes_stacked_via_bottom_layer Metal1
 
 # ── Vertical Power Stripes (Metal6) ──────────────────────────
 add_stripes -nets {VDD VSS} \
     -layer Metal6 \
     -direction vertical \
-    -width 4.0 \
-    -spacing 2.0 \
-    -set_to_set_distance 100.0 \
+    -width 8 \
+    -spacing 1 \
+    -set_to_set_distance 100 \
     -start_from left \
-    -start_offset 30.0 \
+    -start_offset 100 \
+    -stop_offset 100 \
     -switch_layer_over_obs false \
+    -max_same_layer_jog_length 2 \
     -pad_core_ring_top_layer_limit Metal6 \
-    -pad_core_ring_bottom_layer_limit Metal1
+    -pad_core_ring_bottom_layer_limit Metal1 \
+    -block_ring_top_layer_limit Metal6 \
+    -block_ring_bottom_layer_limit Metal1
 
-puts "INFO: Vertical power stripes added (Metal6)."
-
-# ── Horizontal Power Stripes (Metal5) ─────────────────────────
-add_stripes -nets {VDD VSS} \
-    -layer Metal5 \
-    -direction horizontal \
-    -width 4.0 \
-    -spacing 2.0 \
-    -set_to_set_distance 100.0 \
-    -start_from bottom \
-    -start_offset 30.0 \
-    -switch_layer_over_obs false \
-    -pad_core_ring_top_layer_limit Metal6 \
-    -pad_core_ring_bottom_layer_limit Metal1
-
-puts "INFO: Horizontal power stripes added (Metal5)."
+puts "INFO: Vertical power stripes added (Metal6, width 8 um, spacing 1 um)."
 
 # ── Special Route (Standard Cell Rails & Macro Pins) ──────────
-route_special -connect {blockPin padPin padRing corePin floatingStripe} \
-    -layerChangeRange {Metal1 Metal6} \
-    -blockPinTarget {nearestTarget} \
-    -corePinTarget {firstAfterRowEnd} \
-    -floatingStripeTarget {blockRing padRing ring stripe ringPin blockPin followPin} \
-    -allowJogging 1 \
-    -crossoverViaLayerRange {Metal1 Metal6} \
-    -nets {VDD VSS}
+set_db route_special_via_connect_to_shape { stripe }
+route_special \
+    -connect core_pin \
+    -layer_change_range {Metal1 Metal6} \
+    -block_pin_target nearest_target \
+    -core_pin_target first_after_row_end \
+    -allow_jogging 1 \
+    -crossover_via_layer_range {Metal1 Metal6} \
+    -nets {VDD VSS} \
+    -allow_layer_change 1 \
+    -target_via_layer_range {Metal1 Metal6}
 
 puts "INFO: Special routing complete (Standard cell rails & macro power connected)."
 
@@ -94,7 +101,7 @@ puts "INFO: Special routing complete (Standard cell rails & macro power connecte
 set RPT_DIR ${PROJ_ROOT}/physical_design/reports
 file mkdir $RPT_DIR
 check_connectivity -type special -nets {VDD VSS} \
-    -report ${RPT_DIR}/power_connectivity.rpt
+    > ${RPT_DIR}/power_connectivity.rpt
 
 # ── Save Checkpoint ──────────────────────────────────────────
 set SAVE_DIR ${PROJ_ROOT}/physical_design/checkpoints

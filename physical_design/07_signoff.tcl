@@ -41,9 +41,9 @@ time_design -post_route > ${RPT_DIR}/signoff_timing_summary.rpt
 
 # ── DRC & Connectivity Checks ─────────────────────────────────
 puts "INFO: Running signoff DRC and connectivity checks..."
-check_drc -limit 1000      -report ${RPT_DIR}/signoff_drc.rpt
-check_connectivity -type all -report ${RPT_DIR}/signoff_connectivity.rpt
-check_process_antenna        -report ${RPT_DIR}/signoff_antenna.rpt
+check_drc -limit 1000                > ${RPT_DIR}/signoff_drc.rpt
+check_connectivity -type all         > ${RPT_DIR}/signoff_connectivity.rpt
+check_process_antenna                > ${RPT_DIR}/signoff_antenna.rpt
 
 # ── Power & Area Reports ──────────────────────────────────────
 report_power -view view_slow > ${RPT_DIR}/signoff_power_slow.rpt
