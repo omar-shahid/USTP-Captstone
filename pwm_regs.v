@@ -70,12 +70,12 @@ module pwm_regs #(
   end
 
   // ── DUTY register (0-100, clamped on write) ────────────────────────
-  reg [7:0] duty_reg;
+  reg [6:0] duty_reg;
   always @(posedge clk or posedge reset) begin
     if (reset)
-      duty_reg <= 8'd0;
+      duty_reg <= 7'd0;
     else if (memwrite && (addr == 32'hC4))
-      duty_reg <= (wd[7:0] > 8'd100) ? 8'd100 : wd[7:0];
+      duty_reg <= (wd[7:0] > 8'd100) ? 7'd100 : wd[6:0];
   end
 
   // ── PWM period counter + duty compare ──────────────────────────────
@@ -93,11 +93,10 @@ module pwm_regs #(
     end
   end
 
-  // duty*period/100 computed straight into a 32-bit reg - no separate
-  // narrow intermediate, so the divide is never truncated first.
+  localparam PWM_CYCLES_PER_PERCENT = PWM_PERIOD_CYCLES / 100;
   reg [31:0] compare_val;
   always @(*) begin
-    compare_val = (duty_reg * PWM_PERIOD_CYCLES) / 100;
+    compare_val = duty_reg * PWM_CYCLES_PER_PERCENT;
   end
 
   wire pwm_raw = ctrl_en && (pwm_cnt < compare_val);
@@ -169,7 +168,7 @@ module pwm_regs #(
   always @(*) begin
     case (addr)
       32'hC0:  rd = {28'h0, 1'b0, ctrl_tach_en, ctrl_invert, ctrl_en};
-      32'hC4:  rd = {24'h0, duty_reg};
+      32'hC4:  rd = {25'h0, duty_reg};
       32'hC8:  rd = {29'h0, tach_valid, stall_err, ctrl_en};
       32'hCC:  rd = period_reg;
       default: rd = 32'h00000000;

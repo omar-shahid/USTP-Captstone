@@ -11,7 +11,7 @@ begin
  if (reset)
  out <= 32'd0;
  else 
- out <= x;
+ out <= {x[31:1], 1'b0};
 end
 endmodule
 
