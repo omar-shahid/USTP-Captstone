@@ -13,7 +13,7 @@ if (-not (Test-Path "work")) {
     vmap work work
 }
 
-$compileCmd = "vlog -timescale 1ns/1ps -work work -sv macro_models/rom_512x16A.v macro_models/ram_128x16A.v adder.v alu.v alu_control.v clk_div.v control_unit.v cu.v data_mem.v imm_ext.v instr_mem.v mux.v pc.v reg_file.v uart_tx.v uart_rx.v uart_regs.v pwm_regs.v spi_reg.v risc_v.v tb/risc_v_isa_tb.v tb/uart_edge_tb.v tb/risc_v_uart_tb.v tb/uart_loopback_tb.v tb/risc_v_uart_full_tb.v tb/risc_v_hex_tb.v"
+$compileCmd = "vlog -timescale 1ns/1ps -work work -sv macro_models/rom_512x16A.v macro_models/ram_128x16A.v adder.v alu.v alu_control.v clk_div.v control_unit.v cu.v data_mem.v imm_ext.v instr_mem.v mux.v pc.v reg_file.v uart_tx.v uart_rx.v uart_regs.v pwm_regs.v spi_reg.v risc_v.v tb/risc_v_isa_tb.v tb/uart_edge_tb.v tb/risc_v_uart_tb.v tb/uart_loopback_tb.v tb/risc_v_uart_full_tb.v tb/risc_v_hex_tb.v +incdir+tb/layered tb/layered/rv_if.sv tb/layered/rv_layered_pkg.sv tb/layered/rv_layered_tb.sv"
 Invoke-Expression $compileCmd
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Compilation failed!" -ForegroundColor Red
@@ -28,7 +28,12 @@ $testbenches = @(
     @{ Name = "RISC-V UART Serial Stream"; Module = "risc_v_uart_tb"; Args = ""; Desc = "CPU booting, polling UART MMIO, transmitting serial 'Hi' stream" },
     @{ Name = "UART Hardware Loopback"; Module = "uart_loopback_tb"; Args = ""; Desc = "Direct TX->RX loopback with CPU stream verification" },
     @{ Name = "Full Integration & Recovery"; Module = "risc_v_uart_full_tb"; Args = ""; Desc = "CPU serial TX, external RX injection, and mid-execution reset" },
-    @{ Name = "RISC-V Hex-Loader SoC Test"; Module = "risc_v_hex_tb"; Args = "+HEX=assembly_codes/full_soc_test.hex"; Desc = "Dynamic loading and execution of full_soc_test.hex" }
+    @{ Name = "RISC-V Hex-Loader SoC Test"; Module = "risc_v_hex_tb"; Args = "+HEX=assembly_codes/full_soc_test.hex"; Desc = "Dynamic loading and execution of full_soc_test.hex" },
+    @{ Name = "Layered TB: ALU Arithmetic & Logic"; Module = "rv_layered_tb"; Args = "+TEST=alu_test"; Desc = "Layered testbench verifying ALU & immediate operations (17 regs, 6 mem words)" },
+    @{ Name = "Layered TB: Data Memory Access"; Module = "rv_layered_tb"; Args = "+TEST=mem_test"; Desc = "Layered testbench verifying RAM load/store & data integrity (9 regs, 5 mem words)" },
+    @{ Name = "Layered TB: Branches & Loops"; Module = "rv_layered_tb"; Args = "+TEST=branch_test"; Desc = "Layered testbench verifying BEQ/BNE forward/backward branches (6 regs, 2 mem words)" },
+    @{ Name = "Layered TB: UART Serial TX"; Module = "rv_layered_tb"; Args = "+TEST=uart_test"; Desc = "Layered testbench verifying MMIO UART serial output stream ('Hello, RISC-V!')" },
+    @{ Name = "Layered TB: Full SoC Integration"; Module = "rv_layered_tb"; Args = "+TEST=full_soc_test"; Desc = "Layered testbench verifying CPU computation + RAM + UART report ('OK')" }
 )
 
 $results = @()
@@ -40,7 +45,8 @@ foreach ($tb in $testbenches) {
     Write-Host "Description: $($tb.Desc)" -ForegroundColor Gray
     Write-Host "----------------------------------------------------------" -ForegroundColor DarkGray
 
-    $logFile = "$($tb.Module)_sim.log"
+    $testTag = if ($tb.Args -match "\+TEST=(\w+)") { $matches[1] } else { $tb.Module }
+    $logFile = "${testTag}_sim.log"
     $simCmd = "vsim -c -do `"run -all; quit -f`" work.$($tb.Module) $($tb.Args) -l $logFile"
     Invoke-Expression $simCmd
 
