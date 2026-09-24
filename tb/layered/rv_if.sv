@@ -18,14 +18,34 @@ interface rv_if #(
     localparam int BIT_PERIOD = (1_000_000_000 / BAUD_RATE); // 100,000 ns for 10 kHz
 
     //=========================================================================
+    // Test Tracking & Synchronization (for waveform sectionalization)
+    //=========================================================================
+    string       current_test = "INIT";
+    event        test_completed;
+
+    //=========================================================================
     // Backdoor Loading Helper (invoked directly by Driver via vif)
     //=========================================================================
     task automatic load_hex(string hex_file);
         int k;
         for (k = 0; k < 512; k++)
             rv_layered_tb.DUT.IM.mem[k] = 32'h0000_0013; // NOP
+
         $readmemh(hex_file, rv_layered_tb.DUT.IM.mem);
-        $display("[IF] [%0t] Backdoor loaded program: %s", $time, hex_file);
+
+        // Directly populate the ROM macro storage arrays
+        for (k = 0; k < 512; k++) begin
+            rv_layered_tb.DUT.IM.rom_inst_lo.mem[k] = rv_layered_tb.DUT.IM.mem[k][15:0];
+            rv_layered_tb.DUT.IM.rom_inst_hi.mem[k] = rv_layered_tb.DUT.IM.mem[k][31:16];
+        end
+
+        // Clear data RAM for clean inter-test isolation
+        for (k = 0; k < 128; k++) begin
+            rv_layered_tb.DUT.DATA_MEMORY.ram_data_lo.mem[k] = 16'h0000;
+            rv_layered_tb.DUT.DATA_MEMORY.ram_data_hi.mem[k] = 16'h0000;
+        end
+
+        $display("[IF] [%0t] Backdoor loaded program: %s (ROM macros & RAM initialized)", $time, hex_file);
     endtask
 
     //=========================================================================

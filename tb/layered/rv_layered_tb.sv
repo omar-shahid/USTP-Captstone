@@ -95,9 +95,9 @@ module rv_layered_tb;
         $display("  RISC-V LAYERED TESTBENCH");
         $display("==================================================");
 
-        // Get test name from plusarg (default: alu_test)
+        // Get test name from plusarg (default: all - runs all 5 tests continuously)
         if (!$value$plusargs("TEST=%s", test_name))
-            test_name = "alu_test";
+            test_name = "all";
         $display("[TB] Running test: %s", test_name);
 
         // Build environment
@@ -114,11 +114,11 @@ module rv_layered_tb;
 
 
     //=========================================================================
-    // Watchdog Timer – prevent infinite simulation
+    // Watchdog Timer – prevent infinite simulation (350ms total for all 5 tests)
     //=========================================================================
 
     initial begin : watchdog
-        #80_000_000;
+        #350_000_000;
         $display("");
         $display("[TB] *** WATCHDOG TIMEOUT at %0t ***", $time);
         env.report();

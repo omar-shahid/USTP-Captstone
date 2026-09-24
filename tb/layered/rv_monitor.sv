@@ -105,6 +105,8 @@ class rv_monitor;
                 prev_pc       = 32'hFFFF_FFFF;
                 prev_regwrite = 1'b0;
                 prev_memwrite = 1'b0;
+                for (int r = 0; r < 32; r++)
+                    shadow_regs[r] = 32'h0;
             end
         end
     endtask
@@ -179,10 +181,19 @@ class rv_monitor;
                         mon2sb.put(obs);
                     end
 
-                    // Trigger completion event
+                    // Trigger completion events
                     -> program_completed;
-                    break;
+                    -> vif.test_completed;
+
+                    // Wait for next test reset sequence before resuming idle count
+                    wait (vif.reset === 1'b1);
+                    wait (vif.reset === 1'b0);
+                    idle_count   = 0;
+                    last_seen_pc = 32'hFFFF_FFFF;
                 end
+            end else begin
+                idle_count   = 0;
+                last_seen_pc = 32'hFFFF_FFFF;
             end
         end
     endtask

@@ -6,7 +6,7 @@ output reg [31:0]out;
 initial
 out=0;
 
-always @(posedge clk)
+always @(posedge clk or posedge reset)
 begin 
  if (reset)
  out <= 32'd0;

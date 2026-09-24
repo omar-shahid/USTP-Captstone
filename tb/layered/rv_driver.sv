@@ -43,8 +43,11 @@ class rv_driver;
 
         forever begin
             gen2drv.get(tx);
-            $display("[DRV] [%0t] Received stimulus for test '%s' (hex=%s)",
-                     $time, tx.test_name, tx.hex_file);
+            vif.current_test = tx.test_name;
+            $display("");
+            $display("==================================================");
+            $display("  [DRV] [%0t] Starting Test Phase: %s", $time, tx.test_name);
+            $display("==================================================");
 
             // 1. Assert reset while loading code
             vif.drv_cb.reset <= 1'b1;
@@ -52,14 +55,14 @@ class rv_driver;
             // 2. Load program into instruction memory via interface task
             vif.load_hex(tx.hex_file);
 
-            // 3. Hold reset for 10 clock cycles
-            repeat (10) @(vif.drv_cb);
+            // 3. Hold reset for 300 clock cycles (clk_d divider requires >200 clk cycles)
+            repeat (300) @(vif.drv_cb);
 
             // 4. Release reset
             @(vif.drv_cb);
             vif.drv_cb.reset <= 1'b0;
-            @(vif.drv_cb);
-            $display("[DRV] [%0t] Reset released. CPU is now executing.", $time);
+            repeat (50) @(vif.drv_cb);
+            $display("[DRV] [%0t] Reset released for '%s'. CPU is now executing.", $time, tx.test_name);
 
             // 5. If UART host injection is requested, bit-bang RX with BAUD-relative delays
             if (tx.inject_uart) begin
@@ -69,6 +72,10 @@ class rv_driver;
                     send_uart_byte(tx.rx_bytes[i]);
                 end
             end
+
+            // 6. Wait for this test scenario to complete before servicing next test
+            @(vif.test_completed);
+            repeat (10) @(vif.drv_cb);
         end
     endtask
 

@@ -73,8 +73,10 @@ package rv_layered_pkg;
         int fail_count;
         int total_tests;
 
-        // Test configuration name
+        // Test configuration & sequence queue
         string test_name;
+        string test_queue[$];
+        int    current_test_idx;
 
         // Directed Golden Reference Tables
         logic [31:0] expected_regs[int];
@@ -88,26 +90,38 @@ package rv_layered_pkg;
 
         // ----- Constructor -----
         function new(mailbox #(rv_observed_tx) mon2sb);
-            this.mon2sb      = mon2sb;
-            this.is_done     = 1'b0;
-            this.pass_count  = 0;
-            this.fail_count  = 0;
-            this.total_tests = 0;
-            this.test_name   = "";
+            this.mon2sb           = mon2sb;
+            this.is_done          = 1'b0;
+            this.pass_count       = 0;
+            this.fail_count       = 0;
+            this.total_tests      = 0;
+            this.test_name        = "";
+            this.current_test_idx = 0;
             this.expected_uart_str = "";
             this.observed_uart_str = "";
             for (int i = 0; i < 32; i++)
                 observed_regs[i] = 32'h0;
         endfunction
 
-        // ----- Build: Initialize Directed Golden Reference -----
+        // ----- Build: Initialize Test Sequence -----
         function void build(string test_name);
             this.test_name = test_name;
+            if (test_name == "all" || test_name == "all_tests") begin
+                test_queue = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test"};
+            end else begin
+                test_queue = '{test_name};
+            end
+            current_test_idx = 0;
+            load_expectations(test_queue[0]);
+        endfunction
+
+        // ----- Load Golden Expectations for a specific test -----
+        function void load_expectations(string tname);
             expected_regs.delete();
             expected_mem.delete();
             expected_uart_str = "";
 
-            case (test_name)
+            case (tname)
                 "alu_test": begin
                     // Register expectations (x1 - x17)
                     expected_regs[1]  = 32'd10;
@@ -187,10 +201,10 @@ package rv_layered_pkg;
                 end
 
                 default: begin
-                    $display("[SB] WARNING: No golden reference defined for test '%s'", test_name);
+                    $display("[SB] WARNING: No golden reference defined for test '%s'", tname);
                 end
             endcase
-            $display("[SB] Built golden reference model for test: %s", test_name);
+            $display("[SB] Loaded golden reference for test: %s", tname);
         endfunction
 
         // ----- Run: Consume observed transactions from Monitor -----
@@ -209,18 +223,33 @@ package rv_layered_pkg;
                         observed_uart_str = {observed_uart_str, string'(item.uart_char)};
                     end
                     OBS_PROGRAM_DONE: begin
-                        verify_all();
-                        is_done = 1'b1;
-                        -> done;
-                        break;
+                        $display("\n==================================================");
+                        $display("  [SB] [%0t] Verifying Completed Phase: %s", $time, test_queue[current_test_idx]);
+                        $display("==================================================");
+                        verify_all(test_queue[current_test_idx]);
+                        current_test_idx++;
+
+                        if (current_test_idx < test_queue.size()) begin
+                            // Prepare for next test
+                            load_expectations(test_queue[current_test_idx]);
+                            for (int i = 0; i < 32; i++) observed_regs[i] = 32'h0;
+                            observed_mem.delete();
+                            observed_uart_str = "";
+                        end else begin
+                            // All tests finished!
+                            is_done = 1'b1;
+                            -> done;
+                            break;
+                        end
                     end
                 endcase
             end
         endtask
 
         // ----- Verify observed state against golden reference -----
-        function void verify_all();
-            $display("\n[SB] [%0t] Verifying observed DUT results against golden model...", $time);
+        function void verify_all(string phase_name = "");
+            $display("[SB] [%0t] Verifying observed DUT results against golden model (%s)...",
+                     $time, (phase_name != "") ? phase_name : test_name);
 
             // 1. Check Registers
             foreach (expected_regs[idx])
