@@ -24,12 +24,13 @@
 module virtual_temp_sensor #(
     parameter [7:0] TEMPERATURE = 8'h19
 )(
-    input  spi_sclk,
-    input  spi_mosi,
-    input  spi_cs,
-    input  reset,
+    input             spi_sclk,
+    input             spi_mosi,
+    input             spi_cs,
+    input             reset,
+    input      [7:0]  temp_in,
 
-    output reg spi_miso
+    output reg        spi_miso
 );
 
     // ========================================================
@@ -41,6 +42,9 @@ module virtual_temp_sensor #(
     reg [7:0] rx_shift;
 
     reg [2:0] bit_count;
+
+    // Use dynamic input temp_in if connected; otherwise default to parameter TEMPERATURE
+    wire [7:0] active_temp = (temp_in !== 8'bzzzzzzzz && temp_in !== 8'bxxxxxxxx) ? temp_in : TEMPERATURE;
 
     // ========================================================
     // SENSOR INITIALIZATION
@@ -56,24 +60,23 @@ module virtual_temp_sensor #(
 
         if (reset) begin
 
-            tx_shift  <= TEMPERATURE;
+            tx_shift  <= active_temp;
             rx_shift  <= 8'h00;
             bit_count <= 3'd0;
 
-            // MSB of 0x19 = 0
-            spi_miso <= TEMPERATURE[7];
+            spi_miso <= active_temp[7];
 
         end
         else begin
 
-            tx_shift  <= TEMPERATURE;
+            tx_shift  <= active_temp;
 
             rx_shift  <= 8'h00;
 
             bit_count <= 3'd0;
 
             // First bit
-            spi_miso <= TEMPERATURE[7];
+            spi_miso <= active_temp[7];
 
         end
 

@@ -29,7 +29,9 @@ always @(posedge clk or posedge reset) begin
         end
     end else if (regwrite && (rd != 5'd0)) begin
         regs[rd] <= wd;
+`ifdef DEBUG_REG_WRITE
         $strobe("WRITE @%0t rd=%0d wd=%h", $time, rd, wd);
+`endif
     end
 end
 endmodule

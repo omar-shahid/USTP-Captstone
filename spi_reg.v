@@ -294,14 +294,8 @@ module spi_regs (
 
                             spi_mosi <= 1'b0;
 
-                            // IMPORTANT:
-                            //
-                            // Include the current spi_miso bit because
-                            // rx_shift has not yet been updated when using
-                            // a non-blocking assignment.
-                            //
-                            rx_data <=
-                                {rx_shift[6:0], spi_miso};
+                            // rx_shift was already updated on the rising edge of the 8th bit
+                            rx_data <= rx_shift;
 
                         end
 
