@@ -14,29 +14,3 @@ assign controls =
         (opcode == 7'b0010011) ? 9'b1_0_00_1_0_0_10: // I-type (addi)
                                  9'bx_x_xx_x_x_x_xx; // default
 endmodule
-
-module control_unit_tb;
-reg [6:0] opcode;
-wire branch, regwrite, memwrite, alu_src, result_src;
-wire [1:0] imm_src, aluop;
-
-control_unit C_UNIT(branch,regwrite,memwrite,alu_src,result_src,imm_src,aluop,opcode);
-initial begin
-opcode = 7'b0110011; // R-type
-#10; 
-opcode = 7'b0000011; // Load (lw)
-#10; 
-opcode = 7'b0100011; // Store (sw)
-#10; 
-opcode = 7'b1100011;  // Branch (beq/bne/bge)
-#10;
-opcode = 7'b0010011; // I-type (addi)
-#10; 
-opcode = 7'b1111111; // Default (invalid)
-#10; 
-end
-initial begin 
-$monitor("time=%0t opcode=%b | branch=%b regwrite=%b memwrite=%b alu_src=%b result_src=%b imm_src=%b aluop=%b",$time,
- opcode, branch, regwrite, memwrite, alu_src, result_src, imm_src, aluop);
-end
-endmodule

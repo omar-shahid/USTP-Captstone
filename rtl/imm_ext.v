@@ -26,40 +26,4 @@ always @(*) begin
 end
 
 endmodule
- 
-module imm_ext_tb;
-
-reg [31:0] inst;
-reg [1:0]  imm_src;
-wire [31:0] imm_out;
-
-imm_ext IMM_EXT(imm_out,imm_src,inst);
-
-initial begin
-
-//addi x5, x0, 10
-inst = 32'h00A00293;  
-imm_src = 2'b00;     
-#10
-//sw x6, 8(x5)
-inst = 32'h0062A423;  
-imm_src = 2'b01;      
-#10
-//beq x5, x4, 
-inst = 32'h0042A063;  
-imm_src = 2'b10;      
-#15
-//add x7, x6, x5 
-inst = 32'h005303B3;  
-imm_src = 2'b11;      
-#10;
-// beq x4, x5, -20
-inst = 32'hfe521ae3; 
-imm_src = 2'b10;
-#10;
-end
-initial begin
-$monitor("time=%0t inst=%h imm_src=%b imm_out=%h",$time, inst, imm_src, imm_out);
-end
-endmodule
 

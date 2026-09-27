@@ -164,9 +164,6 @@ RISC_V/
 │   ├── risc_v_isa_tb.v         # Core instruction verification
 │   ├── risc_v_uart_full_tb.v   # Full CPU + UART loopback & reset recovery
 │   ├── risc_v_uart_tb.v        # CPU UART TX streaming testbench
-│   ├── tb_pwm_regs.v           # Standalone PWM registers testbench
-│   ├── tb_risc_v_spi.v         # Standalone SPI master & sensor testbench
-│   ├── tb_riscv_pwm.v          # Standalone PWM driver testbench
 │   ├── uart_edge_tb.v          # UART framing/glitch edge cases
 │   └── uart_loopback_tb.v      # Standalone UART TX->RX loopback test
 ├── assembly_codes/             # Assembly test sources & compiled hex
