@@ -66,11 +66,12 @@ interface rv_if #(
     logic        tach_in;           // DUT input  – tachometer feedback (stub)
     logic        pwm_stall_irq;     // DUT output – stall interrupt
 
-    // ----- SPI -----
+    // ----- SPI & Temperature Sensor -----
     logic        spi_sclk;          // DUT output – SPI clock
     logic        spi_mosi;          // DUT output – master-out-slave-in
-    logic        spi_miso;          // DUT input  – master-in-slave-out (stub)
+    logic        spi_miso;          // DUT input  – master-in-slave-out
     logic        spi_cs;            // DUT output – chip select
+    logic [7:0]  sim_temp = 8'h19;  // Dynamic temperature input for virtual sensor
 
     // ----- Datapath observation -----
     logic        result_src;

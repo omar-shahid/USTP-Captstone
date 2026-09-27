@@ -42,8 +42,11 @@ This directory contains assembly test programs (.s) and pre-assembled 32-bit mac
 
 ### 6. `full_soc_test.s` (`.hex`)
 - **Focus**: Comprehensive End-to-End System Integration.
-- **Validation**: Performs arithmetic computation (15 + 25 = 40), stores to RAM `mem[0x00]`, reads back to verify, and transmits `"OK
-"` via UART TX if passed (or `"F"` if failed).
+- **Validation**: Performs arithmetic computation (15 + 25 = 40), stores to RAM `mem[0x00]`, reads back to verify, and transmits `"OK\n"` via UART TX if passed (or `"F"` if failed).
+
+### 7. `spi_temp_test.s` (`.hex`)
+- **Focus**: SPI Master, Virtual Temperature Sensor & PWM MMIO Verification.
+- **Validation**: Configures SPI Clock Divider (`0x110`), enables SPI master (`0x100`), triggers SPI transfer to query the virtual temperature sensor, reads back temperature telemetry (25 C / `0x19`) via `SPI_RXDATA` (`0x108`), verifies PWM MMIO write/readback, stores results to data RAM (`mem[0x00]` = 25, `mem[0x04]` = 1), and transmits `"SPI TEMP 25C OK\n"` over UART TX.
 
 ## Loading Programs in Simulation
 

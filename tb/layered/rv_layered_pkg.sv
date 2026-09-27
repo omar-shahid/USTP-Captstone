@@ -18,11 +18,13 @@ package rv_layered_pkg;
         bit         inject_uart;
         logic [7:0] rx_bytes[$];
         int         rx_delays[$]; // Delay before injecting each byte (in BIT_PERIOD units)
+        logic [7:0] initial_temp; // Temperature for virtual sensor
 
         function new();
-            test_name   = "";
-            hex_file    = "";
-            inject_uart = 1'b0;
+            test_name    = "";
+            hex_file     = "";
+            inject_uart  = 1'b0;
+            initial_temp = 8'h19; // Default 25 C
         endfunction
     endclass
 
@@ -107,7 +109,7 @@ package rv_layered_pkg;
         function void build(string test_name);
             this.test_name = test_name;
             if (test_name == "all" || test_name == "all_tests") begin
-                test_queue = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test"};
+                test_queue = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test", "spi_temp_test"};
             end else begin
                 test_queue = '{test_name};
             end
@@ -198,6 +200,29 @@ package rv_layered_pkg;
 
                     expected_mem[32'h00] = 32'd40;
                     expected_uart_str    = "OK";
+                end
+
+                "spi_temp_test", "spi_test", "temp_sensor_test": begin
+                    // Register expectations
+                    expected_regs[1]  = 32'd4;          // SPI_CLKDIV
+                    expected_regs[2]  = 32'd1;          // SPI_CTRL (enable)
+                    expected_regs[3]  = 32'd3;          // SPI_CTRL (enable + start)
+                    expected_regs[5]  = 32'd25;         // SPI_RXDATA temperature (25 C / 0x19)
+                    expected_regs[6]  = 32'd25;         // Expected temperature comparator
+                    expected_regs[7]  = 32'd1;          // PWM_CTRL (enable)
+                    expected_regs[8]  = 32'd80;         // PWM_DUTY written
+                    expected_regs[9]  = 32'd80;         // PWM_DUTY read back
+                    expected_regs[10] = 32'd128;        // UART base (0x80)
+                    expected_regs[11] = 32'd192;        // PWM base (0xC0)
+                    expected_regs[12] = 32'd256;        // SPI base (0x100)
+                    expected_regs[14] = 32'd1;          // Test pass flag
+
+                    // Memory expectations
+                    expected_mem[32'h00] = 32'd25;      // Temperature stored in RAM
+                    expected_mem[32'h04] = 32'd1;       // Pass flag stored in RAM
+
+                    // UART Telemetry expectation
+                    expected_uart_str    = "SPI TEMP 25C OK";
                 end
 
                 default: begin

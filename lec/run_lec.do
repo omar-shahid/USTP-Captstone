@@ -37,24 +37,24 @@ read library -liberty -both \
 puts "INFO: Loading Golden RTL source files..."
 
 read design \
-    mux.v \
-    adder.v \
-    pc.v \
-    alu.v \
-    alu_control.v \
-    control_unit.v \
-    cu.v \
-    reg_file.v \
-    imm_ext.v \
-    instr_mem.v \
-    data_mem.v \
-    clk_div.v \
-    uart_tx.v \
-    uart_rx.v \
-    uart_regs.v \
-    pwm_regs.v \
-    spi_reg.v \
-    risc_v.v \
+    rtl/mux.v \
+    rtl/adder.v \
+    rtl/pc.v \
+    rtl/alu.v \
+    rtl/alu_control.v \
+    rtl/control_unit.v \
+    rtl/cu.v \
+    rtl/reg_file.v \
+    rtl/imm_ext.v \
+    rtl/instr_mem.v \
+    rtl/data_mem.v \
+    rtl/clk_div.v \
+    rtl/uart_tx.v \
+    rtl/uart_rx.v \
+    rtl/uart_regs.v \
+    rtl/pwm_regs.v \
+    rtl/spi_reg.v \
+    rtl/risc_v.v \
     -golden -verilog2k
 
 set root module risc_v -golden

@@ -83,6 +83,22 @@ module rv_layered_tb;
 
 
     //=========================================================================
+    // Virtual SPI Temperature Sensor
+    //=========================================================================
+
+    virtual_temp_sensor #(
+        .TEMPERATURE (8'h19)             // Default 25 C
+    ) TEMP_SENSOR (
+        .spi_sclk (rvif.spi_sclk),
+        .spi_mosi (rvif.spi_mosi),
+        .spi_cs   (rvif.spi_cs),
+        .reset    (rvif.reset),
+        .temp_in  (rvif.sim_temp),
+        .spi_miso (rvif.spi_miso)
+    );
+
+
+    //=========================================================================
     // Environment & Main Test Flow
     //=========================================================================
 
@@ -114,11 +130,11 @@ module rv_layered_tb;
 
 
     //=========================================================================
-    // Watchdog Timer – prevent infinite simulation (350ms total for all 5 tests)
+    // Watchdog Timer – prevent infinite simulation (500ms total for all 6 tests)
     //=========================================================================
 
     initial begin : watchdog
-        #350_000_000;
+        #500_000_000;
         $display("");
         $display("[TB] *** WATCHDOG TIMEOUT at %0t ***", $time);
         env.report();

@@ -44,27 +44,30 @@ This repository implements a 32-bit single-cycle RISC-V (RV32I subset) processor
 
 ## 3. Directory & Module Map
 
-### Core Processor Modules (Root)
+### Core Processor Modules (`rtl/`)
 
-- `risc_v.v`: Top-level integration (CPU Core + UART MMIO + Clock Divider)
-- `instr_mem.v`: ROM instruction memory supporting parameterizable hex file loading
-- `data_mem.v`: RAM data memory (64 bytes)
-- `pc.v`: Program counter register
-- `adder.v`: Address computation (PC+4, Branch/Jump targets)
-- `reg_file.v`: 32x32-bit register file (x0 hardwired to 0)
-- `imm_ext.v`: Immediate generator (I, S, B, U, J types)
-- `alu.v`: Arithmetic Logic Unit
-- `alu_control.v`: ALU decoder based on `funct3`, `funct7`, and `alu_op`
-- `control_unit.v` / `cu.v`: Main control unit decoder
-- `mux.v`: Multiplexers for datapath routing
-- `clk_div.v`: Clock division for core execution
+- `rtl/risc_v.v`: Top-level integration (CPU Core + UART MMIO + PWM + SPI + Clock Divider)
+- `rtl/instr_mem.v`: ROM instruction memory supporting parameterizable hex file loading
+- `rtl/data_mem.v`: RAM data memory (64 bytes)
+- `rtl/pc.v`: Program counter register
+- `rtl/adder.v`: Address computation (PC+4, Branch/Jump targets)
+- `rtl/reg_file.v`: 32x32-bit register file (x0 hardwired to 0)
+- `rtl/imm_ext.v`: Immediate generator (I, S, B, U, J types)
+- `rtl/alu.v`: Arithmetic Logic Unit
+- `rtl/alu_control.v`: ALU decoder based on `funct3`, `funct7`, and `alu_op`
+- `rtl/control_unit.v` / `rtl/cu.v`: Main control unit decoder
+- `rtl/mux.v`: Multiplexers for datapath routing
+- `rtl/clk_div.v`: Clock division for core execution
 - `program.hex`: Default machine code hex file
 
-### UART Subsystem (Root)
+### Peripheral Subsystems (`rtl/`)
 
-- `uart_tx.v`: UART transmitter with configurable baud rate
-- `uart_rx.v`: UART receiver with sampling logic and start/stop bit validation
-- `uart_regs.v`: MMIO register interface connecting CPU bus to UART TX/RX
+- `rtl/uart_tx.v`: UART transmitter with configurable baud rate
+- `rtl/uart_rx.v`: UART receiver with sampling logic and start/stop bit validation
+- `rtl/uart_regs.v`: MMIO register interface connecting CPU bus to UART TX/RX
+- `rtl/pwm_regs.v`: MMIO PWM controller with tachometer feedback and stall IRQ
+- `rtl/spi_reg.v`: MMIO SPI Master controller
+- `rtl/virtual_temp_sensor.v`: Virtual SPI temperature sensor slave model
 
 ### Assembly Test Suite (`assembly_codes/`)
 
@@ -134,7 +137,7 @@ vsim -c -do sim/run_loopback.do
 ### Manual Compile & Run Individual Testbench
 
 ```powershell
-vlog -timescale 1ns/1ps -work work -sv risc_v.v tb/risc_v_isa_tb.v; vsim -c -do "run -all; quit -f" work.risc_v_isa_tb
+vlog -timescale 1ns/1ps -work work -sv rtl/risc_v.v tb/risc_v_isa_tb.v; vsim -c -do "run -all; quit -f" work.risc_v_isa_tb
 ```
 
 ---

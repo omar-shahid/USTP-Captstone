@@ -3,11 +3,17 @@
 # ====================================================================
 work/
 work*/
-transcript
+transcript*
+**/transcript*
 vsim.wlf
 *.wlf
+**/*.wlf
 wlft*
+**/wlft*
+wlf*
+**/wlf*
 modelsim.ini
+**/modelsim.ini
 *.vstf
 covhtmlreport/
 *.ucdb
@@ -15,9 +21,16 @@ covhtmlreport/
 *.jou
 
 # ====================================================================
-# Simulation Logs & Batch Outputs
+# Simulation & EDA Tool Logs (Questa, Genus, Innovus, LEC)
 # ====================================================================
 *.log
+**/*.log
+*.log*
+**/*.log*
+*.cmd
+**/*.cmd
+*.cmd*
+**/*.cmd*
 sim_output.log
 questa_sim.log
 all_tests_output.log

@@ -37,7 +37,7 @@ class rv_generator;
         string test_list[$];
 
         if (test_name == "all" || test_name == "all_tests") begin
-            test_list = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test"};
+            test_list = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test", "spi_temp_test"};
         end else begin
             test_list = '{test_name};
         end
@@ -52,6 +52,9 @@ class rv_generator;
                 "branch_test":   tx.hex_file = "assembly_codes/cpu_branches_loops.hex";
                 "uart_test":     tx.hex_file = "assembly_codes/uart_tx_hello.hex";
                 "full_soc_test": tx.hex_file = "assembly_codes/full_soc_test.hex";
+                "spi_temp_test",
+                "spi_test",
+                "temp_sensor_test": tx.hex_file = "assembly_codes/spi_temp_test.hex";
                 default: begin
                     $display("[GEN] ERROR: Unknown test_name '%s'", test_list[i]);
                     tx.hex_file = "assembly_codes/cpu_arithmetic_logic.hex";

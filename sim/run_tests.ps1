@@ -13,7 +13,7 @@ if (-not (Test-Path "work")) {
     vmap work work
 }
 
-$compileCmd = "vlog -timescale 1ns/1ps -work work -sv macro_models/rom_512x16A.v macro_models/ram_128x16A.v adder.v alu.v alu_control.v clk_div.v control_unit.v cu.v data_mem.v imm_ext.v instr_mem.v mux.v pc.v reg_file.v uart_tx.v uart_rx.v uart_regs.v pwm_regs.v spi_reg.v virtual_temp_sensor.v risc_v.v tb/risc_v_isa_tb.v tb/uart_edge_tb.v tb/risc_v_uart_tb.v tb/uart_loopback_tb.v tb/risc_v_uart_full_tb.v tb/risc_v_hex_tb.v tb/risc_v_temp_pwm_tb.v +incdir+tb/layered tb/layered/rv_if.sv tb/layered/rv_layered_pkg.sv tb/layered/rv_layered_tb.sv"
+$compileCmd = "vlog -timescale 1ns/1ps -work work -sv macro_models/rom_512x16A.v macro_models/ram_128x16A.v rtl/adder.v rtl/alu.v rtl/alu_control.v rtl/clk_div.v rtl/control_unit.v rtl/cu.v rtl/data_mem.v rtl/imm_ext.v rtl/instr_mem.v rtl/mux.v rtl/pc.v rtl/reg_file.v rtl/uart_tx.v rtl/uart_rx.v rtl/uart_regs.v rtl/pwm_regs.v rtl/spi_reg.v rtl/virtual_temp_sensor.v rtl/risc_v.v tb/risc_v_isa_tb.v tb/uart_edge_tb.v tb/risc_v_uart_tb.v tb/uart_loopback_tb.v tb/risc_v_uart_full_tb.v tb/risc_v_hex_tb.v tb/risc_v_temp_pwm_tb.v +incdir+tb/layered tb/layered/rv_if.sv tb/layered/rv_layered_pkg.sv tb/layered/rv_layered_tb.sv"
 Invoke-Expression $compileCmd
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Compilation failed!" -ForegroundColor Red
@@ -34,7 +34,8 @@ $testbenches = @(
     @{ Name = "Layered TB: Data Memory Access"; Module = "rv_layered_tb"; Args = "+TEST=mem_test"; Desc = "Layered testbench verifying RAM load/store & data integrity (9 regs, 5 mem words)" },
     @{ Name = "Layered TB: Branches & Loops"; Module = "rv_layered_tb"; Args = "+TEST=branch_test"; Desc = "Layered testbench verifying BEQ/BNE forward/backward branches (6 regs, 2 mem words)" },
     @{ Name = "Layered TB: UART Serial TX"; Module = "rv_layered_tb"; Args = "+TEST=uart_test"; Desc = "Layered testbench verifying MMIO UART serial output stream ('Hello, RISC-V!')" },
-    @{ Name = "Layered TB: Full SoC Integration"; Module = "rv_layered_tb"; Args = "+TEST=full_soc_test"; Desc = "Layered testbench verifying CPU computation + RAM + UART report ('OK')" }
+    @{ Name = "Layered TB: Full SoC Integration"; Module = "rv_layered_tb"; Args = "+TEST=full_soc_test"; Desc = "Layered testbench verifying CPU computation + RAM + UART report ('OK')" },
+    @{ Name = "Layered TB: SPI & Temp Sensor"; Module = "rv_layered_tb"; Args = "+TEST=spi_temp_test"; Desc = "Layered testbench verifying SPI Master, Virtual Temp Sensor, PWM MMIO, and UART report" }
 )
 
 $results = @()

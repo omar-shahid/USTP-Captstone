@@ -52,6 +52,9 @@ class rv_driver;
             // 1. Assert reset while loading code
             vif.drv_cb.reset <= 1'b1;
 
+            // Set simulated temperature for virtual sensor
+            vif.sim_temp <= (tx.initial_temp != 8'h00) ? tx.initial_temp : 8'h19;
+
             // 2. Load program into instruction memory via interface task
             vif.load_hex(tx.hex_file);
 

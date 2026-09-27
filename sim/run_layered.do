@@ -17,6 +17,7 @@
 #                                     vsim -do "do sim/run_layered.do branch_test"
 #                                     vsim -do "do sim/run_layered.do uart_test"
 #                                     vsim -do "do sim/run_layered.do full_soc_test"
+#                                     vsim -do "do sim/run_layered.do spi_temp_test"
 # =============================================================================
 
 puts "======================================================================"
@@ -41,24 +42,25 @@ puts ">>> \[STEP 1/3\] Compiling RTL and Memory Macro Models..."
 vlog -timescale 1ns/1ps -work work -sv \
     "$PROJ_DIR/macro_models/rom_512x16A.v" \
     "$PROJ_DIR/macro_models/ram_128x16A.v" \
-    "$PROJ_DIR/adder.v" \
-    "$PROJ_DIR/alu.v" \
-    "$PROJ_DIR/alu_control.v" \
-    "$PROJ_DIR/clk_div.v" \
-    "$PROJ_DIR/control_unit.v" \
-    "$PROJ_DIR/cu.v" \
-    "$PROJ_DIR/data_mem.v" \
-    "$PROJ_DIR/imm_ext.v" \
-    "$PROJ_DIR/instr_mem.v" \
-    "$PROJ_DIR/mux.v" \
-    "$PROJ_DIR/pc.v" \
-    "$PROJ_DIR/reg_file.v" \
-    "$PROJ_DIR/uart_tx.v" \
-    "$PROJ_DIR/uart_rx.v" \
-    "$PROJ_DIR/uart_regs.v" \
-    "$PROJ_DIR/pwm_regs.v" \
-    "$PROJ_DIR/spi_reg.v" \
-    "$PROJ_DIR/risc_v.v"
+    "$PROJ_DIR/rtl/adder.v" \
+    "$PROJ_DIR/rtl/alu.v" \
+    "$PROJ_DIR/rtl/alu_control.v" \
+    "$PROJ_DIR/rtl/clk_div.v" \
+    "$PROJ_DIR/rtl/control_unit.v" \
+    "$PROJ_DIR/rtl/cu.v" \
+    "$PROJ_DIR/rtl/data_mem.v" \
+    "$PROJ_DIR/rtl/imm_ext.v" \
+    "$PROJ_DIR/rtl/instr_mem.v" \
+    "$PROJ_DIR/rtl/mux.v" \
+    "$PROJ_DIR/rtl/pc.v" \
+    "$PROJ_DIR/rtl/reg_file.v" \
+    "$PROJ_DIR/rtl/uart_tx.v" \
+    "$PROJ_DIR/rtl/uart_rx.v" \
+    "$PROJ_DIR/rtl/uart_regs.v" \
+    "$PROJ_DIR/rtl/pwm_regs.v" \
+    "$PROJ_DIR/rtl/spi_reg.v" \
+    "$PROJ_DIR/rtl/virtual_temp_sensor.v" \
+    "$PROJ_DIR/rtl/risc_v.v"
 
 # -----------------------------------------------------------------------------
 # 3. Compile Layered Testbench (in strict dependency order)

@@ -20,7 +20,7 @@ set PROJ_ROOT [file normalize [file dirname [info script]]/..]
 # ── Technology / Library Paths ────────────────────────────────
 set LEF_DIR    ${PROJ_ROOT}/lef
 set LIB_DIR    ${PROJ_ROOT}/lib
-set RTL_DIR    ${PROJ_ROOT}
+set RTL_DIR    ${PROJ_ROOT}/rtl
 set SDC_FILE   ${PROJ_ROOT}/constraints/constraints.sdc
 set OUTPUT_DIR ${PROJ_ROOT}/synthesis/output
 
