@@ -13,7 +13,7 @@ if (-not (Test-Path "work")) {
     vmap work work
 }
 
-$compileCmd = "vlog -timescale 1ns/1ps -work work -sv macro_models/rom_512x16A.v macro_models/ram_128x16A.v rtl/adder.v rtl/alu.v rtl/alu_control.v rtl/clk_div.v rtl/control_unit.v rtl/cu.v rtl/data_mem.v rtl/imm_ext.v rtl/instr_mem.v rtl/mux.v rtl/pc.v rtl/reg_file.v rtl/uart_tx.v rtl/uart_rx.v rtl/uart_regs.v rtl/pwm_regs.v rtl/spi_reg.v rtl/virtual_temp_sensor.v rtl/risc_v.v tb/risc_v_isa_tb.v tb/uart_edge_tb.v tb/risc_v_uart_tb.v tb/uart_loopback_tb.v tb/risc_v_uart_full_tb.v tb/risc_v_hex_tb.v tb/risc_v_temp_pwm_tb.v +incdir+tb/layered tb/layered/rv_if.sv tb/layered/rv_layered_pkg.sv tb/layered/rv_layered_tb.sv"
+$compileCmd = "vlog -timescale 1ns/1ps -work work -sv macro_models/rom_512x16A.v macro_models/ram_128x16A.v rtl/adder.v rtl/alu.v rtl/alu_control.v rtl/clk_div.v rtl/control_unit.v rtl/cu.v rtl/data_mem.v rtl/imm_ext.v rtl/instr_mem.v rtl/mux.v rtl/pc.v rtl/reg_file.v rtl/uart_tx.v rtl/uart_rx.v rtl/uart_regs.v rtl/pwm_regs.v rtl/spi_reg.v rtl/virtual_temp_sensor.v rtl/virtual_fan.v rtl/risc_v.v tb/risc_v_isa_tb.v tb/uart_edge_tb.v tb/risc_v_uart_tb.v tb/uart_loopback_tb.v tb/risc_v_uart_full_tb.v tb/risc_v_hex_tb.v functional_test/risc_v_temp_pwm_tb.v +incdir+tb/layered tb/layered/rv_if.sv tb/layered/rv_layered_pkg.sv tb/layered/rv_layered_tb.sv"
 Invoke-Expression $compileCmd
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Compilation failed!" -ForegroundColor Red
@@ -29,7 +29,7 @@ $testbenches = @(
     @{ Name = "UART Hardware Loopback"; Module = "uart_loopback_tb"; Args = ""; Desc = "Direct TX->RX loopback with CPU stream verification" },
     @{ Name = "Full Integration & Recovery"; Module = "risc_v_uart_full_tb"; Args = ""; Desc = "CPU serial TX, external RX injection, and mid-execution reset" },
     @{ Name = "RISC-V Hex-Loader SoC Test"; Module = "risc_v_hex_tb"; Args = "+HEX=assembly_codes/full_soc_test.hex"; Desc = "Dynamic loading and execution of full_soc_test.hex" },
-    @{ Name = "Closed-Loop Thermal PWM & Telemetry"; Module = "risc_v_temp_pwm_tb"; Args = "+HEX=assembly_codes/pwm_temp_control.hex"; Desc = "SPI sensor querying, PWM fan regulation (80%->40%->80%), and UART ASCII telemetry" },
+    @{ Name = "Closed-Loop Thermal PWM & Telemetry"; Module = "risc_v_temp_pwm_tb"; Args = "+HEX=functional_test/pwm_temp_control.hex"; Desc = "SPI sensor querying, PWM fan regulation (80%->40%->80%), and UART ASCII telemetry" },
     @{ Name = "Layered TB: ALU Arithmetic & Logic"; Module = "rv_layered_tb"; Args = "+TEST=alu_test"; Desc = "Layered testbench verifying ALU & immediate operations (17 regs, 6 mem words)" },
     @{ Name = "Layered TB: Data Memory Access"; Module = "rv_layered_tb"; Args = "+TEST=mem_test"; Desc = "Layered testbench verifying RAM load/store & data integrity (9 regs, 5 mem words)" },
     @{ Name = "Layered TB: Branches & Loops"; Module = "rv_layered_tb"; Args = "+TEST=branch_test"; Desc = "Layered testbench verifying BEQ/BNE forward/backward branches (6 regs, 2 mem words)" },

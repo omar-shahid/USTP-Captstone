@@ -5,7 +5,7 @@
 //    - Protocols slowed down to run with CPU core clock (250 kHz):
 //        * CPU core clock: 250 kHz (50 MHz / 200)
 //        * SPI clock:      250 kHz (SPI_CLKDIV = 100 in software)
-//        * UART baud rate: 250 kBaud (1 bit per CPU clock cycle)
+//        * UART baud rate: 115.2 kBaud (standard 115200 baud)
 //    - Calculates simulated temperature dynamically based on PWM duty cycle:
 //        1. Normal duty cycle = 80% (causes temperature to rise)
 //        2. At temp >= 75 C, CPU throttles PWM duty cycle to 40%
@@ -24,9 +24,9 @@ module risc_v_temp_pwm_tb;
     localparam SIM_CLK_FREQ  = 50_000_000;
     localparam CLK_HALF      = 10; // 50 MHz clock => 20 ns period
 
-    // Protocol Clocks: matched to CPU core frequency (250 kHz)
-    localparam SIM_BAUD_RATE = 250_000; // 250 kHz baud rate (matches 250 kHz CPU frequency)
-    localparam BIT_PERIOD    = (1_000_000_000 / SIM_BAUD_RATE); // 4000 ns per bit = 1 CPU clock
+    // Protocol Clocks: UART configured to standard 115200 baud
+    localparam SIM_BAUD_RATE = 115_200; // Standard 115200 baud rate (115.2 kBaud)
+    localparam BIT_PERIOD    = (1_000_000_000 / SIM_BAUD_RATE); // 8680 ns per bit
 
     // ── Signals ───────────────────────────────────────────────
     reg         clk;
@@ -40,7 +40,9 @@ module risc_v_temp_pwm_tb;
 
     // PWM
     wire        pwm_out;
-    reg         tach_in;
+    wire        tach_in;
+    wire [15:0] fan_rpm;
+    wire [6:0]  fan_duty_pct;
     wire        pwm_stall_irq;
 
     // SPI
@@ -64,7 +66,7 @@ module risc_v_temp_pwm_tb;
 
     // Closed-loop simulated temperature
     reg  [7:0]  sim_temp;
-    string      hex_file = "assembly_codes/pwm_temp_control.hex";
+    string      hex_file = "functional_test/pwm_temp_control.hex";
 
     // Test tracking flags
     integer     pass_count = 0;
@@ -131,6 +133,25 @@ module risc_v_temp_pwm_tb;
         .spi_miso (spi_miso)
     );
 
+    // ── Virtual DC Cooling Fan Model ─────────────────────────
+    virtual_fan #(
+        .CLK_FREQ         (SIM_CLK_FREQ),
+        .PWM_FREQ         (25_000),
+        .PULSES_PER_REV   (2),
+        .MAX_RPM          (6000),
+        .MIN_RPM          (0),
+        .STALL_DUTY_PCT   (5),
+        .RAMP_MS_PER_STEP (1),
+        .RPM_STEP         (1200)
+    ) FAN_MODEL (
+        .clk              (clk),
+        .reset            (reset),
+        .pwm_in           (pwm_out),
+        .tach_out         (tach_in),
+        .rpm_actual       (fan_rpm),
+        .duty_pct         (fan_duty_pct)
+    );
+
     // ── Hex Loading & Reset Sequence ──────────────────────────
     initial begin
         $display("\n==================================================");
@@ -138,8 +159,8 @@ module risc_v_temp_pwm_tb;
         $display("==================================================");
         $display("[CONFIG] System Clock:      %0d MHz", SIM_CLK_FREQ / 1_000_000);
         $display("[CONFIG] CPU Core Clock:    250 kHz (clk / 200)");
-        $display("[CONFIG] Protocol Clocking: Matched to 250 kHz CPU");
-        $display("         - UART Baud Rate:  %0d baud (1 bit / CPU cycle)", SIM_BAUD_RATE);
+        $display("[CONFIG] Protocol Clocking:");
+        $display("         - UART Baud Rate:  %0d baud (standard 115.2 kBaud)", SIM_BAUD_RATE);
         $display("         - SPI Clock:       Configured to 250 kHz via software SPI_CLKDIV=100");
         $display("==================================================\n");
 
@@ -154,7 +175,7 @@ module risc_v_temp_pwm_tb;
             $readmemh(hex_file, DUT.IM.mem);
         end else begin
             $display("[INFO] Loading default hex file: %s", hex_file);
-            $readmemh("assembly_codes/pwm_temp_control.hex", DUT.IM.mem);
+            $readmemh("functional_test/pwm_temp_control.hex", DUT.IM.mem);
         end
 
         // Directly populate the ROM macro storage arrays (matches rv_if.sv convention)
@@ -169,7 +190,6 @@ module risc_v_temp_pwm_tb;
             DUT.DATA_MEMORY.ram_data_hi.mem[k] = 16'h0000;
         end
 
-        tach_in  = 1'b0;
         sim_temp = 8'd55; // Initial temperature: 55 C
 
         reset = 1'b1;
@@ -320,6 +340,8 @@ module risc_v_temp_pwm_tb;
             $display("Throttle to 40%% (>=75 C):   %s", seen_throttle_40 ? "PASSED" : "FAILED");
             $display("Recovery to 80%% (<=50 C):   %s", seen_recover_80  ? "PASSED" : "FAILED");
             $display("Serial Monitor Logs:       %0d received", telemetry_count);
+            $display("Fan RPM at Completion:     %0d RPM", fan_rpm);
+            $display("Tachometer Period (50MHz): %0d cycles", DUT.PWM_REGS.period_reg);
             $display("--------------------------------------------------");
             $display("Checks Passed: %0d", pass_count);
             $display("Checks Failed: %0d", fail_count);

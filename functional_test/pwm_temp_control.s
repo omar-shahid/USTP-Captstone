@@ -62,7 +62,8 @@ main:
     # 2. Hardware Initialization
     # --------------------------------------------------------
     sw   x3,  16(x12)       # SPI_CLKDIV (0x110) = 100
-    sw   x1,  0(x11)        # PWM_CTRL   (0xC0)  = 1 (Enable PWM)
+    addi x4,  x0, 5
+    sw   x4,  0(x11)        # PWM_CTRL   (0xC0)  = 5 (Enable PWM & Tachometer)
     sw   x1,  0(x12)        # SPI_CTRL   (0x100) = 1 (Enable SPI Master)
 
     # Initialize PWM to 80% duty cycle
@@ -126,7 +127,93 @@ div_pwm_done:
     addi x25, x18, 48       # PWM Ones ASCII ('0')
 
     # --------------------------------------------------------
-    # 7. Transmit Serial Monitor Message: "T=XXC, PWM=YY%\n"
+    # 7. Read Tachometer & Compute RPM (x30)
+    # --------------------------------------------------------
+    lw   x29, 12(x11)       # Read PWM_TACH_PERIOD (0xCC) into x29
+
+    # Construct N = 1,500,000,000 (0x59682F00)
+    addi x28, x0, 89
+    addi x26, x0, 8
+    sll  x28, x28, x26      # x28 = 0x5900
+    addi x28, x28, 104
+    sll  x28, x28, x26      # x28 = 0x596800
+    addi x28, x28, 47
+    sll  x28, x28, x26      # x28 = 0x59682F00 = 1,500,000,000
+
+    addi x30, x0, 0         # Default RPM = 0
+    beq  x29, x0, rpm_calc_done
+
+    # 14-iteration binary division: Q = 1,500,000,000 / period
+    addi x26, x0, 14
+    srl  x31, x28, x26      # x31 = R = N >> 14
+    addi x26, x0, 18
+    sll  x28, x28, x26      # x28 = N_shifted = N << 18
+    addi x27, x0, 14        # loop counter = 14
+    addi x4,  x0, 1         # constant 1
+
+rpm_div_loop:
+    sll  x31, x31, x4
+    addi x26, x0, 31
+    srl  x26, x28, x26
+    or   x31, x31, x26
+    sll  x28, x28, x4
+    sll  x30, x30, x4
+
+    slt  x6,  x31, x29      # R < D ?
+    bne  x6,  x0,  rpm_div_next
+    sub  x31, x31, x29      # R = R - D
+    or   x30, x30, x4       # Q = Q | 1
+
+rpm_div_next:
+    addi x27, x27, -1
+    bne  x27, x0,  rpm_div_loop
+
+rpm_calc_done:
+    # --------------------------------------------------------
+    # 8. Convert RPM (x30) to 4 ASCII Digits (x26, x28, x29, x31)
+    # --------------------------------------------------------
+    add  x18, x0,  x30
+
+    # Thousands Digit (x26)
+    addi x26, x0,  0
+    addi x27, x0,  1000
+rpm_thous_loop:
+    slt  x6,  x18, x27
+    bne  x6,  x0,  rpm_thous_done
+    sub  x18, x18, x27
+    addi x26, x26, 1
+    beq  x0,  x0,  rpm_thous_loop
+rpm_thous_done:
+    addi x26, x26, 48       # Thousands ASCII ('0'..'6')
+
+    # Hundreds Digit (x28)
+    addi x28, x0,  0
+    addi x27, x0,  100
+rpm_hund_loop:
+    slt  x6,  x18, x27
+    bne  x6,  x0,  rpm_hund_done
+    sub  x18, x18, x27
+    addi x28, x28, 1
+    beq  x0,  x0,  rpm_hund_loop
+rpm_hund_done:
+    addi x28, x28, 48       # Hundreds ASCII ('0'..'9')
+
+    # Tens Digit (x29)
+    addi x29, x0,  0
+rpm_tens_loop:
+    slt  x6,  x18, x22
+    bne  x6,  x0,  rpm_tens_done
+    sub  x18, x18, x22
+    addi x29, x29, 1
+    beq  x0,  x0,  rpm_tens_loop
+rpm_tens_done:
+    addi x29, x29, 48       # Tens ASCII ('0'..'9')
+
+    # Ones Digit (x31)
+    addi x31, x18, 48       # Ones ASCII ('0'..'9')
+
+    # --------------------------------------------------------
+    # 9. Transmit Serial Monitor Message: "T=XXC, PWM=YY%, RPM=ZZZZ\n"
     # --------------------------------------------------------
     # 1. 'T' (84)
 poll_tx_1:
@@ -236,11 +323,87 @@ poll_tx_14:
     addi x9,  x0, 37
     sw   x9,  0(x10)
 
-    # 15. '\n' (10)
+    # 15. ',' (44)
 poll_tx_15:
     lw   x8,  4(x10)
     andi x8,  x8, 1
     beq  x8,  x0, poll_tx_15
+    addi x9,  x0, 44
+    sw   x9,  0(x10)
+
+    # 16. ' ' (32)
+poll_tx_16:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_16
+    addi x9,  x0, 32
+    sw   x9,  0(x10)
+
+    # 17. 'R' (82)
+poll_tx_17:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_17
+    addi x9,  x0, 82
+    sw   x9,  0(x10)
+
+    # 18. 'P' (80)
+poll_tx_18:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_18
+    addi x9,  x0, 80
+    sw   x9,  0(x10)
+
+    # 19. 'M' (77)
+poll_tx_19:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_19
+    addi x9,  x0, 77
+    sw   x9,  0(x10)
+
+    # 20. '=' (61)
+poll_tx_20:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_20
+    addi x9,  x0, 61
+    sw   x9,  0(x10)
+
+    # 21. RPM Thousands (x26)
+poll_tx_21:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_21
+    sw   x26, 0(x10)
+
+    # 22. RPM Hundreds (x28)
+poll_tx_22:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_22
+    sw   x28, 0(x10)
+
+    # 23. RPM Tens (x29)
+poll_tx_23:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_23
+    sw   x29, 0(x10)
+
+    # 24. RPM Ones (x31)
+poll_tx_24:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_24
+    sw   x31, 0(x10)
+
+    # 25. '\n' (10)
+poll_tx_25:
+    lw   x8,  4(x10)
+    andi x8,  x8, 1
+    beq  x8,  x0, poll_tx_25
     sw   x22, 0(x10)
 
 check_hysteresis:

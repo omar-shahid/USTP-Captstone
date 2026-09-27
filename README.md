@@ -162,7 +162,6 @@ RISC_V/
 │   │   ├── rv_environment.sv   # Environment container
 │   │   └── rv_layered_tb.sv    # Top-level layered test harness
 │   ├── risc_v_isa_tb.v         # Core instruction verification
-│   ├── risc_v_temp_pwm_tb.v    # Closed-loop thermal regulation test
 │   ├── risc_v_uart_full_tb.v   # Full CPU + UART loopback & reset recovery
 │   ├── risc_v_uart_tb.v        # CPU UART TX streaming testbench
 │   ├── tb_pwm_regs.v           # Standalone PWM registers testbench
@@ -177,14 +176,17 @@ RISC_V/
 │   ├── uart_tx_hello.s         # UART "Hello, RISC-V!" string output (.hex)
 │   ├── full_soc_test.s         # End-to-end SoC test (.hex)
 │   ├── spi_temp_test.s         # SPI sensor query & PWM MMIO test (.hex)
-│   ├── pwm_temp_control.s      # Dynamic closed-loop thermal regulation (.hex)
 │   └── README.md               # Assembly test documentation
+├── functional_test/            # Closed-loop thermal PWM & telemetry suite
+│   ├── risc_v_temp_pwm_tb.v    # Dedicated closed-loop testbench
+│   ├── pwm_temp_control.s      # Thermal regulation assembly source
+│   ├── pwm_temp_control.hex    # Assembled machine code
+│   └── run_temp_pwm_sim.do     # ModelSim / Questa simulation script
 ├── sim/                        # Simulation automation & ModelSim scripts
 │   ├── run_tests.ps1           # Automated PowerShell regression suite runner
 │   ├── run_layered.do          # Layered testbench DO script with wave dividers
 │   ├── run_all_tests.do        # Batch runner for standalone testbenches
 │   ├── run_hex_sim.do          # Hex-loading simulation runner
-│   ├── run_temp_pwm_sim.do     # Thermal PWM testbench DO script
 │   ├── run_uart_sim.do         # UART streaming testbench DO script
 │   └── run_loopback.do         # UART loopback testbench DO script
 ├── macro_models/               # TSMC 0.18um Memory Macro Behavioral Models
@@ -318,7 +320,7 @@ vsim -c -do "run -all; quit -f" work.risc_v_hex_tb +HEX=assembly_codes/cpu_arith
 
 #### Closed-Loop Thermal PWM & Telemetry Testbench
 ```powershell
-vsim -c -do sim/run_temp_pwm_sim.do
+vsim -c -do functional_test/run_temp_pwm_sim.do
 ```
 
 #### UART Edge Cases & Hardware Loopback

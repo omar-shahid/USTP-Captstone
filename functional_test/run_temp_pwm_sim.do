@@ -1,13 +1,13 @@
 # ============================================================
 # ModelSim / Questa do-file for Closed-Loop Thermal PWM & Telemetry
-# Run in CLI:  vsim -c -do sim/run_temp_pwm_sim.do
-# Run in GUI:  vsim -do sim/run_temp_pwm_sim.do
-# With custom hex: vsim -c -do "do sim/run_temp_pwm_sim.do path/to/file.hex"
+# Run in CLI:  vsim -c -do functional_test/run_temp_pwm_sim.do
+# Run in GUI:  vsim -do functional_test/run_temp_pwm_sim.do
+# With custom hex: vsim -c -do "do functional_test/run_temp_pwm_sim.do path/to/file.hex"
 #
 # Protocol Clocks:
 #   - CPU Core:   250 kHz (clk_d = 50 MHz / 200)
 #   - SPI Clock:  250 kHz (spi_sclk configured via SPI_CLKDIV = 100)
-#   - UART Baud:  250 kBaud (matched to 250 kHz CPU frequency)
+#   - UART Baud:  115.2 kBaud (standard 115200 baud)
 # ============================================================
 
 if {![file exists work]} {
@@ -17,6 +17,7 @@ if {![file exists work]} {
 
 set ROOT_DIR "D:/ic_design/RISC_V"
 set TB_DIR   "$ROOT_DIR/tb"
+set FUNC_DIR "$ROOT_DIR/functional_test"
 
 # ── Compile Source Files & Dedicated Testbench ─────────────────
 # (Note: uart_*.v files are included only to satisfy module instantiation in risc_v.v)
@@ -41,11 +42,12 @@ vlog -timescale 1ns/1ps -work work -sv \
     "$ROOT_DIR/rtl/pwm_regs.v" \
     "$ROOT_DIR/rtl/spi_reg.v" \
     "$ROOT_DIR/rtl/virtual_temp_sensor.v" \
+    "$ROOT_DIR/rtl/virtual_fan.v" \
     "$ROOT_DIR/rtl/risc_v.v" \
-    "$TB_DIR/risc_v_temp_pwm_tb.v"
+    "$FUNC_DIR/risc_v_temp_pwm_tb.v"
 
 # ── Launch Simulation ──────────────────────────────────────────
-set hex_target "assembly_codes/pwm_temp_control.hex"
+set hex_target "$FUNC_DIR/pwm_temp_control.hex"
 if {[info exists 1]} {
     set hex_target "$1"
 }
@@ -74,6 +76,14 @@ add wave -noupdate                                 /risc_v_temp_pwm_tb/DUT/PWM_R
 add wave -noupdate -radix unsigned                 /risc_v_temp_pwm_tb/DUT/PWM_REGS/duty_reg
 add wave -noupdate -radix unsigned                 /risc_v_temp_pwm_tb/DUT/PWM_REGS/compare_val
 add wave -noupdate -radix unsigned                 /risc_v_temp_pwm_tb/DUT/PWM_REGS/pwm_cnt
+
+# 4. Virtual DC Fan & Tachometer
+add wave -noupdate -divider "Virtual Fan & Tachometer"
+add wave -noupdate -color "Green"                  /risc_v_temp_pwm_tb/FAN_MODEL/pwm_in
+add wave -noupdate -color "Yellow"                 /risc_v_temp_pwm_tb/FAN_MODEL/tach_out
+add wave -noupdate -radix unsigned -color "Orange" /risc_v_temp_pwm_tb/FAN_MODEL/rpm_actual
+add wave -noupdate -radix unsigned                 /risc_v_temp_pwm_tb/FAN_MODEL/duty_pct
+add wave -noupdate -radix unsigned -color "Cyan"   /risc_v_temp_pwm_tb/DUT/PWM_REGS/period_reg
 
 # 4. SPI Bus & Virtual Temperature Sensor
 add wave -noupdate -divider "SPI Temp Sensor Interface"

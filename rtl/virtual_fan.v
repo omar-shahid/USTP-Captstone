@@ -101,7 +101,7 @@ module virtual_fan #(
       tach_out <= 1'b0;  // stopped fan -> no tach edges -> controller will see a stall
       tach_cnt <= 0;
     end else begin
-      tach_half_period = (60*CLK_FREQ) / (rpm_actual * PULSES_PER_REV * 2);
+      tach_half_period = (64'd60*CLK_FREQ) / (rpm_actual * PULSES_PER_REV * 2);
       if (tach_half_period < 1) tach_half_period = 1;
       if (tach_cnt >= tach_half_period-1) begin
         tach_out <= ~tach_out;
