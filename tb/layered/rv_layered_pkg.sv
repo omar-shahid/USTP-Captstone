@@ -19,12 +19,14 @@ package rv_layered_pkg;
         logic [7:0] rx_bytes[$];
         int         rx_delays[$]; // Delay before injecting each byte (in BIT_PERIOD units)
         logic [7:0] initial_temp; // Temperature for virtual sensor
+        logic [7:0] dynamic_temp; // Dynamic temperature update
 
         function new();
             test_name    = "";
             hex_file     = "";
             inject_uart  = 1'b0;
             initial_temp = 8'h19; // Default 25 C
+            dynamic_temp = 8'd75; // Default 75 C
         endfunction
     endclass
 
@@ -109,7 +111,7 @@ package rv_layered_pkg;
         function void build(string test_name);
             this.test_name = test_name;
             if (test_name == "all" || test_name == "all_tests") begin
-                test_queue = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test", "spi_temp_test"};
+                test_queue = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test", "spi_temp_test", "fan_test", "temp_sensor_test"};
             end else begin
                 test_queue = '{test_name};
             end
@@ -202,7 +204,7 @@ package rv_layered_pkg;
                     expected_uart_str    = "OK";
                 end
 
-                "spi_temp_test", "spi_test", "temp_sensor_test": begin
+                "spi_temp_test", "spi_test": begin
                     // Register expectations
                     expected_regs[1]  = 32'd4;          // SPI_CLKDIV
                     expected_regs[2]  = 32'd1;          // SPI_CTRL (enable)
@@ -223,6 +225,50 @@ package rv_layered_pkg;
 
                     // UART Telemetry expectation
                     expected_uart_str    = "SPI TEMP 25C OK";
+                end
+
+                "fan_test", "virtual_fan_test": begin
+                    // Register expectations
+                    expected_regs[1]  = 32'd5;          // PWM_CTRL (EN + TACH_EN)
+                    expected_regs[2]  = 32'd80;         // PWM_DUTY (80%)
+                    expected_regs[3]  = 32'd1250;       // PWM_TACH_PERIOD @ 80% duty (4800 RPM)
+                    expected_regs[4]  = 32'd40;         // PWM_DUTY (40%)
+                    expected_regs[5]  = 32'd2500;       // PWM_TACH_PERIOD @ 40% duty (2400 RPM)
+                    expected_regs[6]  = 32'd1250;       // Target 80% tach period
+                    expected_regs[7]  = 32'd2500;       // Target 40% tach period
+                    expected_regs[10] = 32'd128;        // UART base (0x80)
+                    expected_regs[11] = 32'd192;        // PWM base (0xC0)
+                    expected_regs[14] = 32'd1;          // Pass flag
+
+                    // Memory expectations
+                    expected_mem[32'h00] = 32'd1250;    // Tach period @ 80% stored in RAM
+                    expected_mem[32'h04] = 32'd2500;    // Tach period @ 40% stored in RAM
+                    expected_mem[32'h08] = 32'd1;       // Pass flag stored in RAM
+
+                    // UART Telemetry expectation
+                    expected_uart_str    = "FAN TACH OK";
+                end
+
+                "temp_sensor_test": begin
+                    // Register expectations
+                    expected_regs[1]  = 32'd4;          // SPI_CLKDIV
+                    expected_regs[2]  = 32'd1;          // SPI_CTRL (enable)
+                    expected_regs[3]  = 32'd3;          // SPI_CTRL (enable + start)
+                    expected_regs[5]  = 32'd25;         // Initial temperature (25 C / 0x19)
+                    expected_regs[6]  = 32'd25;         // Expected initial temp
+                    expected_regs[7]  = 32'd75;         // Dynamic temperature (75 C / 0x4B)
+                    expected_regs[9]  = 32'd75;         // Expected dynamic temp
+                    expected_regs[10] = 32'd128;        // UART base (0x80)
+                    expected_regs[12] = 32'd256;        // SPI base (0x100)
+                    expected_regs[14] = 32'd1;          // Pass flag
+
+                    // Memory expectations
+                    expected_mem[32'h00] = 32'd25;      // Initial temp stored in RAM
+                    expected_mem[32'h04] = 32'd75;      // Dynamic temp stored in RAM
+                    expected_mem[32'h08] = 32'd1;       // Pass flag stored in RAM
+
+                    // UART Telemetry expectation
+                    expected_uart_str    = "TEMP 25C 75C OK";
                 end
 
                 default: begin

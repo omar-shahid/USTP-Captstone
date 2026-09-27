@@ -63,8 +63,10 @@ interface rv_if #(
 
     // ----- PWM / Fan -----
     logic        pwm_out;           // DUT output – PWM drive
-    logic        tach_in;           // DUT input  – tachometer feedback (stub)
+    logic        tach_in;           // DUT input  – tachometer feedback (from virtual fan)
     logic        pwm_stall_irq;     // DUT output – stall interrupt
+    logic [15:0] fan_rpm;           // Virtual Fan debug – modeled RPM
+    logic [6:0]  fan_duty_pct;      // Virtual Fan debug – measured duty %
 
     // ----- SPI & Temperature Sensor -----
     logic        spi_sclk;          // DUT output – SPI clock
@@ -110,10 +112,15 @@ interface rv_if #(
         input uart_rx_ready;
         input uart_rx_data;
         input pwm_out;
+        input tach_in;
         input pwm_stall_irq;
+        input fan_rpm;
+        input fan_duty_pct;
         input spi_sclk;
         input spi_mosi;
+        input spi_miso;
         input spi_cs;
+        input sim_temp;
         input result_src;
         input alu_src;
         input pc_src;

@@ -48,6 +48,14 @@ This directory contains assembly test programs (.s) and pre-assembled 32-bit mac
 - **Focus**: SPI Master, Virtual Temperature Sensor & PWM MMIO Verification.
 - **Validation**: Configures SPI Clock Divider (`0x110`), enables SPI master (`0x100`), triggers SPI transfer to query the virtual temperature sensor, reads back temperature telemetry (25 C / `0x19`) via `SPI_RXDATA` (`0x108`), verifies PWM MMIO write/readback, stores results to data RAM (`mem[0x00]` = 25, `mem[0x04]` = 1), and transmits `"SPI TEMP 25C OK\n"` over UART TX.
 
+### 8. `fan_test.s` (`.hex`)
+- **Focus**: Virtual Fan Model, PWM Duty Control & Tachometer Feedback.
+- **Validation**: Configures `PWM_CTRL` (`0xC0`) = 5 (EN + TACH_EN), sets `PWM_DUTY` (`0xC4`) to 80% (4800 RPM), polls `PWM_TACH_PERIOD` (`0xCC`) until period reaches 1250 cycles, stores to `mem[0x00]`, throttles duty to 40% (2400 RPM), polls until period adjusts to 2500 cycles, stores to `mem[0x04]`, sets pass flag `mem[0x08] = 1`, and transmits `"FAN TACH OK\n"` over UART TX.
+
+### 9. `temp_sensor_test.s` (`.hex`)
+- **Focus**: Dynamic Temperature Sensing & Multi-Transfer SPI Master Verification.
+- **Validation**: Configures `SPI_CLKDIV` (`0x110`) = 4, enables SPI master, reads initial sensor temperature (25 C / `0x19`), stores to `mem[0x00]`, pauses for testbench driver dynamic temperature stimulus (75 C / `0x4B`), performs second SPI transfer, reads and validates updated temperature, stores to `mem[0x04]`, sets pass flag `mem[0x08] = 1`, and transmits `"TEMP 25C 75C OK\n"` over UART TX.
+
 ## Loading Programs in Simulation
 
 Use the dedicated hex-loader testbench `tb/risc_v_hex_tb.v`:

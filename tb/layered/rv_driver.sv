@@ -76,7 +76,22 @@ class rv_driver;
                 end
             end
 
-            // 6. Wait for this test scenario to complete before servicing next test
+            // 6. Dynamic temperature stimulus for temp_sensor_test
+            if (tx.test_name == "temp_sensor_test") begin
+                fork
+                    begin
+                        // Wait until CPU writes initial temperature to RAM (memwrite @ 0x00)
+                        wait (!vif.reset && vif.memwrite && vif.alu_result == 32'h00000000);
+                        repeat (200) @(vif.drv_cb);
+                        vif.sim_temp <= (tx.dynamic_temp != 8'h00) ? tx.dynamic_temp : 8'd75;
+                        @(vif.drv_cb);
+                        $display("[DRV] [%0t] Dynamically injected new temperature: %0d C (0x%02X)",
+                                 $time, vif.sim_temp, vif.sim_temp);
+                    end
+                join_none
+            end
+
+            // 7. Wait for this test scenario to complete before servicing next test
             @(vif.test_completed);
             repeat (10) @(vif.drv_cb);
         end

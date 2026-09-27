@@ -18,6 +18,8 @@
 #                                     vsim -do "do sim/run_layered.do uart_test"
 #                                     vsim -do "do sim/run_layered.do full_soc_test"
 #                                     vsim -do "do sim/run_layered.do spi_temp_test"
+#                                     vsim -do "do sim/run_layered.do fan_test"
+#                                     vsim -do "do sim/run_layered.do temp_sensor_test"
 # =============================================================================
 
 puts "======================================================================"
@@ -60,6 +62,7 @@ vlog -timescale 1ns/1ps -work work -sv \
     "$PROJ_DIR/rtl/pwm_regs.v" \
     "$PROJ_DIR/rtl/spi_reg.v" \
     "$PROJ_DIR/rtl/virtual_temp_sensor.v" \
+    "$PROJ_DIR/rtl/virtual_fan.v" \
     "$PROJ_DIR/rtl/risc_v.v"
 
 # -----------------------------------------------------------------------------
@@ -147,15 +150,21 @@ proc add_waveform_sections {target_mode} {
     # ── Section 8: PWM Controller & Speed Feedback ───────────────
     add wave -noupdate -divider "8. PWM & TACHOMETER"
     add wave -noupdate -color "Pink"                      /rv_layered_tb/rvif/pwm_out
-    add wave -noupdate                                    /rv_layered_tb/rvif/tach_in
+    add wave -noupdate -color "Yellow"                    /rv_layered_tb/rvif/tach_in
     add wave -noupdate -color "Red"                       /rv_layered_tb/rvif/pwm_stall_irq
+    add wave -noupdate -radix unsigned -color "Orange"    /rv_layered_tb/rvif/fan_rpm
+    add wave -noupdate -radix unsigned                    /rv_layered_tb/rvif/fan_duty_pct
+    add wave -noupdate -radix unsigned                    /rv_layered_tb/DUT/PWM_REGS/duty_reg
+    add wave -noupdate -radix unsigned -color "Cyan"      /rv_layered_tb/DUT/PWM_REGS/period_reg
 
     # ── Section 9: SPI Master Subsystem ──────────────────────────
-    add wave -noupdate -divider "9. SPI MASTER"
+    add wave -noupdate -divider "9. SPI MASTER & TEMP SENSOR"
     add wave -noupdate                                    /rv_layered_tb/rvif/spi_sclk
     add wave -noupdate                                    /rv_layered_tb/rvif/spi_mosi
     add wave -noupdate                                    /rv_layered_tb/rvif/spi_miso
     add wave -noupdate                                    /rv_layered_tb/rvif/spi_cs
+    add wave -noupdate -radix unsigned -color "Red"       /rv_layered_tb/rvif/sim_temp
+    add wave -noupdate -radix hexadecimal                 /rv_layered_tb/DUT/SPI_REGS/rx_data
 
     # Format wave window display
     if {![batch_mode]} {

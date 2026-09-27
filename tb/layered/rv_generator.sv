@@ -37,7 +37,7 @@ class rv_generator;
         string test_list[$];
 
         if (test_name == "all" || test_name == "all_tests") begin
-            test_list = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test", "spi_temp_test"};
+            test_list = '{"alu_test", "mem_test", "branch_test", "uart_test", "full_soc_test", "spi_temp_test", "fan_test", "temp_sensor_test"};
         end else begin
             test_list = '{test_name};
         end
@@ -47,14 +47,20 @@ class rv_generator;
             tx.test_name = test_list[i];
 
             case (test_list[i])
-                "alu_test":      tx.hex_file = "assembly_codes/cpu_arithmetic_logic.hex";
-                "mem_test":      tx.hex_file = "assembly_codes/cpu_memory_access.hex";
-                "branch_test":   tx.hex_file = "assembly_codes/cpu_branches_loops.hex";
-                "uart_test":     tx.hex_file = "assembly_codes/uart_tx_hello.hex";
-                "full_soc_test": tx.hex_file = "assembly_codes/full_soc_test.hex";
+                "alu_test":         tx.hex_file = "assembly_codes/cpu_arithmetic_logic.hex";
+                "mem_test":         tx.hex_file = "assembly_codes/cpu_memory_access.hex";
+                "branch_test":      tx.hex_file = "assembly_codes/cpu_branches_loops.hex";
+                "uart_test":        tx.hex_file = "assembly_codes/uart_tx_hello.hex";
+                "full_soc_test":    tx.hex_file = "assembly_codes/full_soc_test.hex";
                 "spi_temp_test",
-                "spi_test",
-                "temp_sensor_test": tx.hex_file = "assembly_codes/spi_temp_test.hex";
+                "spi_test":         tx.hex_file = "assembly_codes/spi_temp_test.hex";
+                "fan_test",
+                "virtual_fan_test": tx.hex_file = "assembly_codes/fan_test.hex";
+                "temp_sensor_test": begin
+                    tx.hex_file     = "assembly_codes/temp_sensor_test.hex";
+                    tx.initial_temp = 8'd25;
+                    tx.dynamic_temp = 8'd75;
+                end
                 default: begin
                     $display("[GEN] ERROR: Unknown test_name '%s'", test_list[i]);
                     tx.hex_file = "assembly_codes/cpu_arithmetic_logic.hex";

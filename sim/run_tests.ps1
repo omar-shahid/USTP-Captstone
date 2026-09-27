@@ -35,7 +35,9 @@ $testbenches = @(
     @{ Name = "Layered TB: Branches & Loops"; Module = "rv_layered_tb"; Args = "+TEST=branch_test"; Desc = "Layered testbench verifying BEQ/BNE forward/backward branches (6 regs, 2 mem words)" },
     @{ Name = "Layered TB: UART Serial TX"; Module = "rv_layered_tb"; Args = "+TEST=uart_test"; Desc = "Layered testbench verifying MMIO UART serial output stream ('Hello, RISC-V!')" },
     @{ Name = "Layered TB: Full SoC Integration"; Module = "rv_layered_tb"; Args = "+TEST=full_soc_test"; Desc = "Layered testbench verifying CPU computation + RAM + UART report ('OK')" },
-    @{ Name = "Layered TB: SPI & Temp Sensor"; Module = "rv_layered_tb"; Args = "+TEST=spi_temp_test"; Desc = "Layered testbench verifying SPI Master, Virtual Temp Sensor, PWM MMIO, and UART report" }
+    @{ Name = "Layered TB: SPI & Temp Sensor"; Module = "rv_layered_tb"; Args = "+TEST=spi_temp_test"; Desc = "Layered testbench verifying SPI Master, Virtual Temp Sensor, PWM MMIO, and UART report" },
+    @{ Name = "Layered TB: Virtual Fan & Tachometer"; Module = "rv_layered_tb"; Args = "+TEST=fan_test"; Desc = "Layered testbench verifying Virtual Fan spin-up, speed throttling (80%->40%), tachometer periods (1250, 2500), and UART report" },
+    @{ Name = "Layered TB: Dynamic Temp Sensor"; Module = "rv_layered_tb"; Args = "+TEST=temp_sensor_test"; Desc = "Layered testbench verifying Virtual Temp Sensor multi-temperature dynamic reads (25C->75C), SPI Master, and UART report" }
 )
 
 $results = @()

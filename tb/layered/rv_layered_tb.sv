@@ -25,6 +25,7 @@ module rv_layered_tb;
 
     localparam SIM_CLK_FREQ  = 200_000;   // 200 kHz
     localparam SIM_BAUD_RATE = 10_000;    // 10 kBaud
+    localparam SIM_PWM_FREQ  = 1_000;     // 1 kHz (200 cycles per PWM period)
     localparam CLK_HALF      = 2500;      // Half-period → 5000 ns period
 
 
@@ -51,9 +52,11 @@ module rv_layered_tb;
     //=========================================================================
 
     risc_v #(
-        .CLK_FREQ  (SIM_CLK_FREQ),
-        .BAUD_RATE (SIM_BAUD_RATE),
-        .HEX_FILE  ("")                  // Hex loaded dynamically by Driver via vif
+        .CLK_FREQ         (SIM_CLK_FREQ),
+        .BAUD_RATE        (SIM_BAUD_RATE),
+        .PWM_FREQ         (SIM_PWM_FREQ),
+        .STALL_TIMEOUT_MS (50),
+        .HEX_FILE         ("")                  // Hex loaded dynamically by Driver via vif
     ) DUT (
         .clk           (clk),
         .reset         (rvif.reset),
@@ -99,6 +102,29 @@ module rv_layered_tb;
 
 
     //=========================================================================
+    // Virtual DC Cooling Fan Model
+    //=========================================================================
+
+    virtual_fan #(
+        .CLK_FREQ         (SIM_CLK_FREQ),
+        .PWM_FREQ         (SIM_PWM_FREQ),
+        .PULSES_PER_REV   (2),
+        .MAX_RPM          (6000),
+        .MIN_RPM          (0),
+        .STALL_DUTY_PCT   (5),
+        .RAMP_MS_PER_STEP (1),
+        .RPM_STEP         (1200)
+    ) FAN_MODEL (
+        .clk        (clk),
+        .reset      (rvif.reset),
+        .pwm_in     (rvif.pwm_out),
+        .tach_out   (rvif.tach_in),
+        .rpm_actual (rvif.fan_rpm),
+        .duty_pct   (rvif.fan_duty_pct)
+    );
+
+
+    //=========================================================================
     // Environment & Main Test Flow
     //=========================================================================
 
@@ -130,11 +156,11 @@ module rv_layered_tb;
 
 
     //=========================================================================
-    // Watchdog Timer – prevent infinite simulation (500ms total for all 6 tests)
+    // Watchdog Timer – prevent infinite simulation (1000ms total for all 8 tests)
     //=========================================================================
 
     initial begin : watchdog
-        #500_000_000;
+        #1000_000_000;
         $display("");
         $display("[TB] *** WATCHDOG TIMEOUT at %0t ***", $time);
         env.report();
